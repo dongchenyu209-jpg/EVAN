@@ -210,7 +210,7 @@
   .profile-status, .chat-head .cstat {
     color: var(--name-color, var(--ink-soft)) !important;
   }
-  .diary-list{ border:1.5px solid var(--ink); background:rgba(255,255,255,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); box-shadow: none; }
+  .diary-list{ border:1.5px solid var(--ink); background:rgba(255,255,255,0.22); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); box-shadow: none; }
   .diary-list-item{ display:flex; align-items:center; gap:10px; padding:13px 14px; cursor:pointer; font-size:13.5px; transition:background .12s; }
   .diary-list-item:active{ background:var(--blush); }
   .dli-icon{ font-size:16px; width:22px; text-align:center; flex-shrink:0; position:relative; }
@@ -223,7 +223,7 @@
   .photo-grid .ph-item .del{ position:absolute; top:3px; right:3px; background:rgba(0,0,0,0.55); color:#fff; border-radius:50%; width:18px;height:18px; display:flex;align-items:center;justify-content:center; font-size:11px; cursor:pointer; }
 
   /* search */
-  .search-bar{ display:flex; align-items:center; gap:8px; border:1.5px solid var(--ink); padding:10px 12px; margin-top:14px; background:rgba(255,255,255,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); box-shadow: none; }
+  .search-bar{ display:flex; align-items:center; gap:8px; border:1.5px solid var(--ink); padding:10px 12px; margin-top:14px; background:rgba(255,255,255,0.22); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); box-shadow: none; }
   .search-bar input{ flex:1; border:none; background:transparent; outline:none; font-size:13.5px; color:var(--ink); font-family:inherit;}
   .go-btn{ border:1px solid var(--ink); padding:5px 14px; font-weight:700; font-size:12px; cursor:pointer; background:transparent; transition: background .15s;}
   .go-btn:active{ background:var(--blush); }
@@ -236,8 +236,8 @@
   .fn-icon{
     width:56px;height:56px; border:1.5px solid var(--ink); border-radius:18px;
     display:flex;align-items:center;justify-content:center; font-size:22px;
-    background:rgba(255,255,255,0.55);
-    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    background:rgba(255,255,255,0.22);
+    backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
     box-shadow: none;
     transition: transform .12s, box-shadow .12s; position:relative;
   }
@@ -309,7 +309,7 @@
   .moments-cover-hint{ position:absolute; top:16px; right:14px; font-size:10.5px; color:rgba(255,255,255,0.8); z-index:2; }
   .moments-cover-name{ position:absolute; left:16px; bottom:32px; color:#fff; font-family:'Noto Serif SC',serif; font-weight:700; font-size:17px; text-shadow:0 1px 4px rgba(0,0,0,0.5); z-index:2; }
   .moments-cover-bio{ position:absolute; left:16px; bottom:12px; color:rgba(255,255,255,0.85); font-size:11.5px; cursor:pointer; text-shadow:0 1px 3px rgba(0,0,0,0.5); z-index:2; }
-  .moments-search{ display:flex; align-items:center; gap:8px; padding:9px 12px; margin:14px 0; border:1px solid var(--rule); border-radius:16px; background:var(--paper-2); }
+  .moments-search{ display:flex; align-items:center; gap:8px; padding:9px 12px; margin:14px 0; border:1px solid var(--rule); border-radius:16px; background:rgba(255,255,255,0.22); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
   .moments-search input{ flex:1; border:none; background:transparent; outline:none; font-size:12.5px; color:var(--ink); font-family:inherit; }
   .moments-cover-avatar{
     width:58px;height:58px;border-radius:13px; border:2px solid #fff; position:absolute; right:14px; bottom:-18px;
@@ -325,7 +325,7 @@
   .moment-text{ font-size:13.5px; margin-top:4px; line-height:1.5; }
   .moment-photo{ width:100%; max-width:220px; border-radius:6px; margin-top:8px; display:block; box-shadow:0 3px 8px -3px rgba(42,36,31,0.3); }
   .moment-meta{ font-size:11px; color:var(--ink-soft); margin-top:8px; }
-  .moment-interactions{ background:var(--paper-2); border-radius:6px; padding:8px 10px; margin-top:8px; font-size:12.5px; }
+  .moment-interactions{ background:rgba(255,255,255,0.22); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); border-radius:6px; padding:8px 10px; margin-top:8px; font-size:12.5px; }
   .moment-likes{ color:var(--rouge); }
   .moment-comment{ margin-top:4px; }
   #view-moments{ min-height:calc(100vh - 40px); position:relative; }
@@ -339,10 +339,10 @@
   .moment-actions{ display:flex; gap:14px; margin-top:8px; }
   .moment-like-btn{ font-size:12.5px; cursor:pointer; color:var(--ink-soft); }
   .moment-like-btn.active{ color:var(--rouge); }
-  .moment-thread{ background:var(--paper-2); border-radius:6px; padding:8px 10px; margin-top:6px; font-size:12.5px; }
+  .moment-thread{ background:rgba(255,255,255,0.22); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); border-radius:6px; padding:8px 10px; margin-top:6px; font-size:12.5px; }
   .moment-comment-line{ padding:2px 0; }
   .moment-comment-input-row{ display:flex; gap:6px; margin-top:8px; align-items:center; }
-  .moment-comment-input-row input{ flex:1; border:1px solid var(--rule); background:var(--paper-2); padding:6px 9px; font-size:12px; border-radius:14px; outline:none; }
+  .moment-comment-input-row input{ flex:1; border:1px solid var(--rule); background:rgba(255,255,255,0.22); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); padding:6px 9px; font-size:12px; border-radius:14px; outline:none; }
   .moment-comment-input-row span{ font-size:12px; color:var(--rouge); cursor:pointer; font-weight:700; flex-shrink:0; }
   .list-item{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; border-bottom:1px dotted var(--rule); padding:8px 0; font-size:13px; }
   .list-item .meta{ color:var(--ink-soft); font-size:11px; }
@@ -2546,7 +2546,10 @@ function ensureProactiveSchedule(){
   } else if(proactiveState.nextMsgAt){ proactiveState.nextMsgAt = null; changed = true; }
   if(!proactiveState.nextLetterAt){ scheduleNextProactiveLetter(); changed = true; }
   if(!proactiveState.nextCallAt){ scheduleNextProactiveCall(); changed = true; }
-  if(!proactiveState.nextMomentAt){ scheduleNextProactiveMoment(); changed = true; }
+  if(!proactiveState.nextMomentAt){
+    scheduleNextProactiveMoment();
+    changed = true;
+  }
   if(changed) sSet('proactive-state', proactiveState);
 }
 async function checkProactive(){
@@ -2569,7 +2572,7 @@ async function checkProactive(){
   }
   if(proactiveState.nextMomentAt && Date.now() >= proactiveState.nextMomentAt){
     await sendProactiveMoment();
-    scheduleNextProactiveMoment();
+    scheduleNextProactiveMoment(); // 发完这一条，重新在下一个 2～15 天窗口里纯随机挑一个时间点，不预先定好次数
     changed = true;
   }
   if(changed) await sSet('proactive-state', proactiveState);
@@ -3584,17 +3587,27 @@ async function postMoment(){
   momentDraftMedia = null;
   closeOverlay();
   renderMoments();
-  await addMomentEvent('reaction', post.id);
+  // 先 50/50 决定会不会点赞、会不会评论；只有「会」才登记时间，到期必执行（不再二次抛硬币）
+  if(Math.random() < 0.5){
+    await addMomentEvent('like', post.id, 'like');
+  }
+  if(Math.random() < 0.5){
+    await addMomentEvent('comment', post.id, 'comment');
+  }
 }
-/* ---- 朋友圈"待触发事件"：存时间戳靠轮询检查（跟写信/主动消息同一套思路），
-   不用 setTimeout 直接等，因为现在延迟拉长到 1~48 小时，页面刷新/关闭会让 setTimeout 失效 ---- */
-async function addMomentEvent(type, postId){
-  // reaction（点赞/评论新动态）：1~48小时，模拟"过一阵子才刷到"
-  // commentReply（回你的评论）：1分钟~12小时，更贴近对话节奏，不至于拖太久显得冷淡
+/* ---- 朋友圈"待触发事件"：先决定要不要互动，再随机「什么时候」；
+   存时间戳靠轮询检查（跟写信/主动消息同一套思路），不用超长 setTimeout ---- */
+async function addMomentEvent(type, postId, action){
+  // like / comment：1~48小时，模拟"过一阵子才刷到"（调用方已先 50/50 决定要不要）
+  // commentReply：1分钟~12小时；调用方已先 50/50 决定要不要回
   const range = type==='commentReply'
     ? [1*60*1000, 12*3600*1000]
     : [1*3600*1000, 48*3600*1000];
-  momentEvents.push({ id:uid(), type, postId, dueAt: Date.now() + randomBetween(range[0], range[1]) });
+  momentEvents.push({
+    id:uid(), type, postId,
+    action: action || (type==='like'?'like': type==='comment'?'comment': null),
+    dueAt: Date.now() + randomBetween(range[0], range[1])
+  });
   await sSet('moment-events', momentEvents);
 }
 async function checkMomentEvents(){
@@ -3607,9 +3620,12 @@ async function checkMomentEvents(){
   for(const e of due){
     const post = momentsPosts.find(p=>p.id===e.postId);
     if(!post) continue; // 帖子不在当前已加载分页里，跳过（多为很久以前的旧帖）
-    if(e.type==='reaction'){
-      post.liked = Math.random() < 0.5;
-      if(Math.random() < 0.5){
+    if(e.type==='reaction' || e.type==='like' || e.type==='comment'){
+      // 进队时已决定要互动，到期必执行（不再二次 50/50）
+      const doLike = e.action==='like' || e.type==='like' || (e.type==='reaction' && !e.action);
+      const doComment = e.action==='comment' || e.type==='comment';
+      if(doLike) post.liked = true;
+      if(doComment){
         const c = getRandomCardText();
         if(c){ post.comment = c; post.commented = true; }
       }
@@ -3631,7 +3647,9 @@ async function checkMomentEvents(){
 
 /* ---- TA 也会自己挑内容、随机什么时候发朋友圈 ---- */
 function scheduleNextProactiveMoment(){
-  proactiveState.nextMomentAt = Date.now() + randomBetween(2*3600*1000, 6*24*3600*1000);
+  // 纯随机：从现在起 2～15 天之间任意挑一个时间点，哪一天触发不预先定好
+  // （跟写信 scheduleNextProactiveLetter / 打电话 scheduleNextProactiveCall 同一套思路）
+  proactiveState.nextMomentAt = Date.now() + randomBetween(2*24*3600*1000, 15*24*3600*1000);
 }
 async function sendProactiveMoment(){
   const lineCount = 1 + Math.floor(Math.random()*2);
@@ -4889,7 +4907,7 @@ async function onCustomBgImage(e){
   if(!f) return;
   const reader = new FileReader();
   reader.onload = async ()=>{
-    themeSettings.customBgImage = reader.result;
+    themeSettings.customBgImage = await compressImage(reader.result, 1400); // 背景图铺满全屏，压缩上限比头像类图片宽一些，避免糊
     await sSet('theme-settings', themeSettings);
     applyTheme();
     alert('背景图已应用');
@@ -4908,7 +4926,7 @@ async function onAnnivBgImage(e){
   if(!f) return;
   const reader = new FileReader();
   reader.onload = async ()=>{
-    themeSettings.annivBgImage = reader.result;
+    themeSettings.annivBgImage = await compressImage(reader.result, 1400); // 同样压缩，避免原图直接存进 IndexedDB
     await sSet('theme-settings', themeSettings);
     applyTheme();
     alert('纪念日卡片背景图已应用');
