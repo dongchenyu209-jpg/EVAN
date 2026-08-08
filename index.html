@@ -44,7 +44,20 @@
     font-family: var(--font-body, 'Noto Sans SC', sans-serif);
     min-height:100vh;
     transition: background-color .3s, color .3s;
+    position: relative;
   }
+  body::before{
+    content:'';
+    position:fixed; inset:0; z-index:0;
+    background-image: var(--page-bg-image, none);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    filter: blur(1px);
+    transform: scale(1.01);
+    pointer-events: none;
+  }
+  body > *{ position: relative; z-index: 1; }
   body.paper-plain{ background-image:none; }
   body.paper-dot{
     background-image: radial-gradient(var(--rule) 1px, transparent 1px);
@@ -197,7 +210,7 @@
   .profile-status, .chat-head .cstat {
     color: var(--name-color, var(--ink-soft)) !important;
   }
-  .diary-list{ border:1.5px solid var(--ink); background:transparent; box-shadow: none; }
+  .diary-list{ border:1.5px solid var(--ink); background:rgba(255,255,255,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); box-shadow: none; }
   .diary-list-item{ display:flex; align-items:center; gap:10px; padding:13px 14px; cursor:pointer; font-size:13.5px; transition:background .12s; }
   .diary-list-item:active{ background:var(--blush); }
   .dli-icon{ font-size:16px; width:22px; text-align:center; flex-shrink:0; position:relative; }
@@ -210,7 +223,7 @@
   .photo-grid .ph-item .del{ position:absolute; top:3px; right:3px; background:rgba(0,0,0,0.55); color:#fff; border-radius:50%; width:18px;height:18px; display:flex;align-items:center;justify-content:center; font-size:11px; cursor:pointer; }
 
   /* search */
-  .search-bar{ display:flex; align-items:center; gap:8px; border:1.5px solid var(--ink); padding:10px 12px; margin-top:14px; background:transparent; box-shadow: none; }
+  .search-bar{ display:flex; align-items:center; gap:8px; border:1.5px solid var(--ink); padding:10px 12px; margin-top:14px; background:rgba(255,255,255,0.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); box-shadow: none; }
   .search-bar input{ flex:1; border:none; background:transparent; outline:none; font-size:13.5px; color:var(--ink); font-family:inherit;}
   .go-btn{ border:1px solid var(--ink); padding:5px 14px; font-weight:700; font-size:12px; cursor:pointer; background:transparent; transition: background .15s;}
   .go-btn:active{ background:var(--blush); }
@@ -223,7 +236,8 @@
   .fn-icon{
     width:56px;height:56px; border:1.5px solid var(--ink); border-radius:18px;
     display:flex;align-items:center;justify-content:center; font-size:22px;
-    background:transparent;
+    background:rgba(255,255,255,0.55);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
     box-shadow: none;
     transition: transform .12s, box-shadow .12s; position:relative;
   }
@@ -347,6 +361,17 @@
     position:fixed; inset:0; z-index:40; max-width:480px; left:0; right:0; margin:0 auto;
     display:flex; flex-direction:column; background:transparent; padding:0;
   }
+  #view-chat::before{
+    content:'';
+    position:absolute; inset:0; z-index:0;
+    background-image: var(--chat-bg-image, none);
+    background-size: cover;
+    background-position: center;
+    filter: blur(1px);
+    transform: scale(1.01);
+    pointer-events: none;
+  }
+  #view-chat > *{ position:relative; z-index:1; }
   #view-chat.hidden{ display:none !important; }
   #view-chat .view-head{ padding:10px 14px; margin:0; background:transparent; flex-shrink:0; }
   .chat-wrap{ display:flex; flex-direction:column; flex:1; height:auto; border:none; background:transparent; box-shadow:none; margin:0; border-radius:0; min-height:0; }
@@ -816,12 +841,14 @@
         <div class="btn outline" onclick="setBodyFont('serif')">衬线体</div>
         <div class="btn outline" onclick="setBodyFont('hand')">手写体</div>
       </div>
+      <div id="bodyFontPreview" style="margin-top:10px;padding:12px;border:1px dashed var(--rule);font-size:15px;line-height:1.6;">预览：在一起的每一天 · The days we stay together 123</div>
       <label class="field" style="margin-top:12px;">正文文字颜色</label>
       <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
-        <input type="color" id="inkColorPicker" value="#2A241F" style="width:48px;height:36px;border:1px solid var(--ink);padding:0;" oninput="document.getElementById('inkColorText').value=this.value">
-        <input type="text" id="inkColorText" value="#2A241F" placeholder="#2A241F" style="flex:1;">
+        <input type="color" id="inkColorPicker" value="#2A241F" style="width:48px;height:36px;border:1px solid var(--ink);padding:0;" oninput="document.getElementById('inkColorText').value=this.value; previewInkColor(this.value)">
+        <input type="text" id="inkColorText" value="#2A241F" placeholder="#2A241F" style="flex:1;" oninput="previewInkColor(this.value)">
         <div class="btn outline" style="padding:8px 12px;" onclick="setInkColor()">应用</div>
       </div>
+      <div id="inkColorPreview" style="margin-top:8px;padding:10px 12px;border:1px dashed var(--rule);font-size:15px;">颜色预览：正文文字会变成这个颜色</div>
       <div class="btn-row" style="margin-top:8px;">
         <div class="btn outline" onclick="resetInkColor()">恢复默认正文色</div>
       </div>
@@ -834,15 +861,27 @@
         <div class="btn outline" onclick="setSecondaryFont('serif')">衬线体</div>
         <div class="btn outline" onclick="setSecondaryFont('hand')">手写体</div>
       </div>
+      <div id="secondaryFontPreview" style="margin-top:10px;padding:12px;border:1px dashed var(--rule);font-size:16px;font-weight:700;line-height:1.6;">预览：陆沉 · 羽羽 · Status 状态名</div>
       <label class="field" style="margin-top:12px;">名字 / 状态颜色</label>
       <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
-        <input type="color" id="nameColorPicker" value="#2A241F" style="width:48px;height:36px;border:1px solid var(--ink);padding:0;" oninput="document.getElementById('nameColorText').value=this.value">
-        <input type="text" id="nameColorText" value="#2A241F" placeholder="#2A241F 或留空用正文色" style="flex:1;">
+        <input type="color" id="nameColorPicker" value="#2A241F" style="width:48px;height:36px;border:1px solid var(--ink);padding:0;" oninput="document.getElementById('nameColorText').value=this.value; previewNameColor(this.value)">
+        <input type="text" id="nameColorText" value="#2A241F" placeholder="#2A241F 或留空用正文色" style="flex:1;" oninput="previewNameColor(this.value)">
         <div class="btn outline" style="padding:8px 12px;" onclick="setNameColor()">应用</div>
       </div>
+      <div id="nameColorPreview" style="margin-top:8px;padding:10px 12px;border:1px dashed var(--rule);font-size:15px;font-weight:700;">颜色预览：名字 / 状态会变成这个颜色</div>
       <div class="btn-row" style="margin-top:8px;">
         <div class="btn outline" onclick="resetNameColor()">恢复默认</div>
       </div>
+    </div>
+    <div class="box">
+      <div class="box-title">自定义字体 CSS</div>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin:0 0 8px;">可粘贴 @import / @font-face，或写 font-family。应用后加载到整页。</p>
+      <textarea id="customFontCss" placeholder="例如：&#10;@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');&#10;:root { --font-body: 'ZCOOL KuaiLe', cursive; }" style="min-height:90px;font-family:monospace;font-size:11px;"></textarea>
+      <div class="btn-row">
+        <div class="btn" onclick="applyCustomFontCss()">应用字体 CSS</div>
+        <div class="btn outline" onclick="clearCustomFontCss()">清空</div>
+      </div>
+      <div id="customFontPreview" style="margin-top:10px;padding:12px;border:1px dashed var(--rule);font-size:15px;line-height:1.6;display:none;">自定义字体预览：在一起的每一天 ABC 123</div>
     </div>
     <div class="box">
       <div class="box-title">气泡自定义 CSS</div>
@@ -1309,7 +1348,7 @@ let proactiveMsgSettings = { enabled: true, minMinutes: 1, maxMinutes: 60 }; // 
 // 拼字卡：开启后回复会随机把多张字卡拼成一段再发
 let spliceCardsEnabled = false;
 let currentView = 'home';
-let themeSettings = { accent:'#9C2F3B', paperStyle:'grid', dark:false, bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customBg:'', customBgImage:'', annivBg:'', annivBgImage:'', annivCustomCss:'' };
+let themeSettings = { accent:'#9C2F3B', paperStyle:'grid', dark:false, bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customFontCss:'', customBg:'', customBgImage:'', annivBg:'', annivBgImage:'', annivCustomCss:'' };
 let customBubbleCSS = '';
 let pendingReplyTimer = null;
 let lastGroupUsed = null, lastCardUsed = {};
@@ -1404,10 +1443,12 @@ async function init(){
   if(themeSettings.inkColor === undefined) themeSettings.inkColor = '';
   if(!themeSettings.secondaryFont) themeSettings.secondaryFont = 'serif';
   if(themeSettings.nameColor === undefined) themeSettings.nameColor = '';
+  if(themeSettings.customFontCss === undefined) themeSettings.customFontCss = '';
   customBubbleCSS = await sGet('custom-bubble-css', '');
 
   applyTheme();
   applyCustomBubbleCSSToPage();
+  applyCustomFontCssToPage();
   renderHomeProfile();
   renderChat();
   renderCardsView();
@@ -2945,27 +2986,23 @@ function hexToRgba(hex, alpha){
   return `rgba(${r},${g},${b},${alpha})`;
 }
 function applyChatBackground(){
-  // 传讯页独立背景：优先用 chatSettings.background 铺满整个聊天页，和主页背景区分开
+  // 传讯页独立背景（轻微模糊，文字保持清晰）
   const view = document.getElementById('view-chat');
   const msgs = document.getElementById('chatMsgs');
   if(chatSettings.background){
     if(view){
-      view.style.backgroundImage = `url(${chatSettings.background})`;
-      view.style.backgroundSize = 'cover';
-      view.style.backgroundPosition = 'center';
+      view.style.setProperty('--chat-bg-image', `url(${chatSettings.background})`);
+      view.style.backgroundImage = 'none';
       view.style.backgroundColor = 'transparent';
     }
-    if(msgs){
-      msgs.style.backgroundImage = 'none';
-    }
+    if(msgs) msgs.style.backgroundImage = 'none';
   } else {
     if(view){
+      view.style.removeProperty('--chat-bg-image');
       view.style.backgroundImage = '';
       view.style.backgroundColor = '';
     }
-    if(msgs){
-      msgs.style.backgroundImage = 'none';
-    }
+    if(msgs) msgs.style.backgroundImage = 'none';
   }
 }
 
@@ -4097,6 +4134,12 @@ function renderBeautify(){
   const nt = document.getElementById('nameColorText');
   if(np) np.value = (curName.startsWith('#') && curName.length<=7) ? curName : '#2A241F';
   if(nt) nt.value = themeSettings.nameColor || '';
+  // 同步自定义字体 CSS + 预览
+  const fontCssTa = document.getElementById('customFontCss');
+  if(fontCssTa) fontCssTa.value = themeSettings.customFontCss || '';
+  const customPrev = document.getElementById('customFontPreview');
+  if(customPrev) customPrev.style.display = themeSettings.customFontCss ? 'block' : 'none';
+  updateFontPreviews();
 }
 async function setAccent(c){
   themeSettings.accent = c; await sSet('theme-settings', themeSettings); applyTheme();
@@ -4105,10 +4148,73 @@ async function setPaperStyle(style){
   themeSettings.paperStyle = style; await sSet('theme-settings', themeSettings); applyTheme();
 }
 async function setBodyFont(key){
-  themeSettings.bodyFont = key; await sSet('theme-settings', themeSettings); applyTheme();
+  themeSettings.bodyFont = key; await sSet('theme-settings', themeSettings); applyTheme(); updateFontPreviews();
 }
 async function setSecondaryFont(key){
-  themeSettings.secondaryFont = key; await sSet('theme-settings', themeSettings); applyTheme();
+  themeSettings.secondaryFont = key; await sSet('theme-settings', themeSettings); applyTheme(); updateFontPreviews();
+}
+function updateFontPreviews(){
+  const bodyPrev = document.getElementById('bodyFontPreview');
+  const secPrev = document.getElementById('secondaryFontPreview');
+  if(bodyPrev){
+    bodyPrev.style.fontFamily = FONT_MAP[themeSettings.bodyFont] || FONT_MAP.sans;
+    bodyPrev.style.color = themeSettings.inkColor || '';
+  }
+  if(secPrev){
+    secPrev.style.fontFamily = FONT_MAP[themeSettings.secondaryFont] || FONT_MAP.serif;
+    secPrev.style.color = themeSettings.nameColor || themeSettings.inkColor || '';
+  }
+  // 同步颜色预览框
+  const inkPrev = document.getElementById('inkColorPreview');
+  const namePrev = document.getElementById('nameColorPreview');
+  if(inkPrev) inkPrev.style.color = themeSettings.inkColor || getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#2A241F';
+  if(namePrev) namePrev.style.color = themeSettings.nameColor || themeSettings.inkColor || getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#2A241F';
+}
+function previewInkColor(val){
+  const el = document.getElementById('inkColorPreview');
+  const bodyPrev = document.getElementById('bodyFontPreview');
+  const c = (val || '').trim() || '#2A241F';
+  if(el) el.style.color = c;
+  if(bodyPrev) bodyPrev.style.color = c;
+  // 同步 color picker 如果是合法 hex
+  const picker = document.getElementById('inkColorPicker');
+  if(picker && /^#[0-9A-Fa-f]{6}$/.test(c)) picker.value = c;
+}
+function previewNameColor(val){
+  const el = document.getElementById('nameColorPreview');
+  const secPrev = document.getElementById('secondaryFontPreview');
+  const c = (val || '').trim() || '#2A241F';
+  if(el) el.style.color = c;
+  if(secPrev) secPrev.style.color = c;
+  const picker = document.getElementById('nameColorPicker');
+  if(picker && /^#[0-9A-Fa-f]{6}$/.test(c)) picker.value = c;
+}
+async function applyCustomFontCss(){
+  const ta = document.getElementById('customFontCss');
+  const val = (ta && ta.value || '').trim();
+  themeSettings.customFontCss = val;
+  await sSet('theme-settings', themeSettings);
+  applyCustomFontCssToPage();
+  const prev = document.getElementById('customFontPreview');
+  if(prev){ prev.style.display = val ? 'block' : 'none'; }
+}
+async function clearCustomFontCss(){
+  themeSettings.customFontCss = '';
+  const ta = document.getElementById('customFontCss');
+  if(ta) ta.value = '';
+  await sSet('theme-settings', themeSettings);
+  applyCustomFontCssToPage();
+  const prev = document.getElementById('customFontPreview');
+  if(prev) prev.style.display = 'none';
+}
+function applyCustomFontCssToPage(){
+  let styleEl = document.getElementById('customFontStyleTag');
+  if(!styleEl){
+    styleEl = document.createElement('style');
+    styleEl.id = 'customFontStyleTag';
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = themeSettings.customFontCss || '';
 }
 async function setInkColor(){
   const text = document.getElementById('inkColorText');
@@ -4116,12 +4222,14 @@ async function setInkColor(){
   themeSettings.inkColor = val;
   await sSet('theme-settings', themeSettings);
   applyTheme();
+  updateFontPreviews();
   renderBeautify();
 }
 async function resetInkColor(){
   themeSettings.inkColor = '';
   await sSet('theme-settings', themeSettings);
   applyTheme();
+  updateFontPreviews();
   renderBeautify();
 }
 async function setNameColor(){
@@ -4130,12 +4238,14 @@ async function setNameColor(){
   themeSettings.nameColor = val;
   await sSet('theme-settings', themeSettings);
   applyTheme();
+  updateFontPreviews();
   renderBeautify();
 }
 async function resetNameColor(){
   themeSettings.nameColor = '';
   await sSet('theme-settings', themeSettings);
   applyTheme();
+  updateFontPreviews();
   renderBeautify();
 }
 async function toggleDark(){
@@ -4143,11 +4253,11 @@ async function toggleDark(){
   await sSet('theme-settings', themeSettings); applyTheme(); renderBeautify();
 }
 async function resetAppearance(){
-  themeSettings = { accent:'#9C2F3B', paperStyle:'grid', dark:false, bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customBg:'', customBgImage:'', annivBg:'', annivBgImage:'', annivCustomCss:'' };
+  themeSettings = { accent:'#9C2F3B', paperStyle:'grid', dark:false, bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customFontCss:'', customBg:'', customBgImage:'', annivBg:'', annivBgImage:'', annivCustomCss:'' };
   customBubbleCSS = '';
   await sSet('theme-settings', themeSettings);
   await sSet('custom-bubble-css', customBubbleCSS);
-  applyTheme(); applyCustomBubbleCSSToPage(); renderBeautify();
+  applyTheme(); applyCustomBubbleCSSToPage(); applyCustomFontCssToPage(); renderBeautify();
 }
 function applyTheme(){
   document.documentElement.style.setProperty('--rouge', themeSettings.accent);
@@ -4177,17 +4287,17 @@ function applyTheme(){
   if(themeSettings.paperStyle==='plain') document.body.classList.add('paper-plain');
   if(themeSettings.paperStyle==='dot') document.body.classList.add('paper-dot');
   document.body.setAttribute('data-dark', themeSettings.dark ? '1':'0');
-  // 页面背景：优先图片，其次自定义纯色
+  // 页面背景：优先图片（1px 轻微模糊），其次自定义纯色
   if(themeSettings.customBgImage){
-    document.body.style.backgroundImage = 'url(' + themeSettings.customBgImage + ')';
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundPosition = 'center';
-    document.body.style.backgroundAttachment = 'fixed';
-    document.body.style.backgroundColor = '';
+    document.body.style.setProperty('--page-bg-image', 'url(' + themeSettings.customBgImage + ')');
+    document.body.style.backgroundImage = 'none';
+    document.body.style.backgroundColor = 'transparent';
   } else if(themeSettings.customBg){
+    document.body.style.removeProperty('--page-bg-image');
     document.body.style.backgroundImage = 'none';
     document.body.style.backgroundColor = themeSettings.customBg;
   } else {
+    document.body.style.removeProperty('--page-bg-image');
     document.body.style.backgroundImage = '';
     document.body.style.backgroundColor = '';
   }
