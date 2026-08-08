@@ -815,12 +815,6 @@
         <div class="btn outline" onclick="clearAnnivCardBg()">清除卡片背景</div>
       </div>
       <input type="file" id="annivBgImageInput" accept="image/*" class="hidden" onchange="onAnnivBgImage(event)">
-      <label class="field" style="margin-top:10px;">自定义卡片 CSS（高级）</label>
-      <textarea id="annivCustomCss" placeholder="例如：border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,0.12);" style="min-height:60px;"></textarea>
-      <div class="btn-row">
-        <div class="btn" onclick="applyAnnivCustomCss()">应用样式</div>
-        <div class="btn outline" onclick="clearAnnivCustomCss()">清空样式</div>
-      </div>
     </div>
     <div class="box">
       <div class="box-title">纸张纹理</div>
@@ -872,16 +866,6 @@
       <div class="btn-row" style="margin-top:8px;">
         <div class="btn outline" onclick="resetNameColor()">恢复默认</div>
       </div>
-    </div>
-    <div class="box">
-      <div class="box-title">自定义字体 CSS</div>
-      <p style="font-size:11.5px;color:var(--ink-soft);margin:0 0 8px;">可粘贴 @import / @font-face，或写 font-family。应用后加载到整页。</p>
-      <textarea id="customFontCss" placeholder="例如：&#10;@import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap');&#10;:root { --font-body: 'ZCOOL KuaiLe', cursive; }" style="min-height:90px;font-family:monospace;font-size:11px;"></textarea>
-      <div class="btn-row">
-        <div class="btn" onclick="applyCustomFontCss()">应用字体 CSS</div>
-        <div class="btn outline" onclick="clearCustomFontCss()">清空</div>
-      </div>
-      <div id="customFontPreview" style="margin-top:10px;padding:12px;border:1px dashed var(--rule);font-size:15px;line-height:1.6;display:none;">自定义字体预览：在一起的每一天 ABC 123</div>
     </div>
     <div class="box">
       <div class="box-title">气泡自定义 CSS</div>
@@ -1348,7 +1332,7 @@ let proactiveMsgSettings = { enabled: true, minMinutes: 1, maxMinutes: 60 }; // 
 // 拼字卡：开启后回复会随机把多张字卡拼成一段再发
 let spliceCardsEnabled = false;
 let currentView = 'home';
-let themeSettings = { accent:'#9C2F3B', paperStyle:'grid', dark:false, bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customFontCss:'', customBg:'', customBgImage:'', annivBg:'', annivBgImage:'', annivCustomCss:'' };
+let themeSettings = { accent:'#9C2F3B', paperStyle:'grid', dark:false, bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customBg:'', customBgImage:'', annivBg:'', annivBgImage:'' };
 let customBubbleCSS = '';
 let pendingReplyTimer = null;
 let lastGroupUsed = null, lastCardUsed = {};
@@ -1439,16 +1423,13 @@ async function init(){
   if(!themeSettings.customBgImage) themeSettings.customBgImage = '';
   if(!themeSettings.annivBg) themeSettings.annivBg = '';
   if(!themeSettings.annivBgImage) themeSettings.annivBgImage = '';
-  if(!themeSettings.annivCustomCss) themeSettings.annivCustomCss = '';
   if(themeSettings.inkColor === undefined) themeSettings.inkColor = '';
   if(!themeSettings.secondaryFont) themeSettings.secondaryFont = 'serif';
   if(themeSettings.nameColor === undefined) themeSettings.nameColor = '';
-  if(themeSettings.customFontCss === undefined) themeSettings.customFontCss = '';
   customBubbleCSS = await sGet('custom-bubble-css', '');
 
   applyTheme();
   applyCustomBubbleCSSToPage();
-  applyCustomFontCssToPage();
   renderHomeProfile();
   renderChat();
   renderCardsView();
@@ -4138,8 +4119,6 @@ function renderBeautify(){
   if(darkSw) darkSw.classList.toggle('on', !!themeSettings.dark);
   const cssInput = document.getElementById('bubbleCssInput');
   if(cssInput) cssInput.value = customBubbleCSS || '';
-  const annivCss = document.getElementById('annivCustomCss');
-  if(annivCss) annivCss.value = themeSettings.annivCustomCss || '';
   // 同步文字颜色输入框
   const curInk = themeSettings.inkColor || '#2A241F';
   const picker = document.getElementById('inkColorPicker');
@@ -4152,11 +4131,6 @@ function renderBeautify(){
   const nt = document.getElementById('nameColorText');
   if(np) np.value = (curName.startsWith('#') && curName.length<=7) ? curName : '#2A241F';
   if(nt) nt.value = themeSettings.nameColor || '';
-  // 同步自定义字体 CSS + 预览
-  const fontCssTa = document.getElementById('customFontCss');
-  if(fontCssTa) fontCssTa.value = themeSettings.customFontCss || '';
-  const customPrev = document.getElementById('customFontPreview');
-  if(customPrev) customPrev.style.display = themeSettings.customFontCss ? 'block' : 'none';
   updateFontPreviews();
 }
 async function setAccent(c){
@@ -4207,33 +4181,6 @@ function previewNameColor(val){
   const picker = document.getElementById('nameColorPicker');
   if(picker && /^#[0-9A-Fa-f]{6}$/.test(c)) picker.value = c;
 }
-async function applyCustomFontCss(){
-  const ta = document.getElementById('customFontCss');
-  const val = (ta && ta.value || '').trim();
-  themeSettings.customFontCss = val;
-  await sSet('theme-settings', themeSettings);
-  applyCustomFontCssToPage();
-  const prev = document.getElementById('customFontPreview');
-  if(prev){ prev.style.display = val ? 'block' : 'none'; }
-}
-async function clearCustomFontCss(){
-  themeSettings.customFontCss = '';
-  const ta = document.getElementById('customFontCss');
-  if(ta) ta.value = '';
-  await sSet('theme-settings', themeSettings);
-  applyCustomFontCssToPage();
-  const prev = document.getElementById('customFontPreview');
-  if(prev) prev.style.display = 'none';
-}
-function applyCustomFontCssToPage(){
-  let styleEl = document.getElementById('customFontStyleTag');
-  if(!styleEl){
-    styleEl = document.createElement('style');
-    styleEl.id = 'customFontStyleTag';
-    document.head.appendChild(styleEl);
-  }
-  styleEl.textContent = themeSettings.customFontCss || '';
-}
 async function setInkColor(){
   const text = document.getElementById('inkColorText');
   const val = (text && text.value || '').trim();
@@ -4271,11 +4218,11 @@ async function toggleDark(){
   await sSet('theme-settings', themeSettings); applyTheme(); renderBeautify();
 }
 async function resetAppearance(){
-  themeSettings = { accent:'#9C2F3B', paperStyle:'grid', dark:false, bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customFontCss:'', customBg:'', customBgImage:'', annivBg:'', annivBgImage:'', annivCustomCss:'' };
+  themeSettings = { accent:'#9C2F3B', paperStyle:'grid', dark:false, bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customBg:'', customBgImage:'', annivBg:'', annivBgImage:'' };
   customBubbleCSS = '';
   await sSet('theme-settings', themeSettings);
   await sSet('custom-bubble-css', customBubbleCSS);
-  applyTheme(); applyCustomBubbleCSSToPage(); applyCustomFontCssToPage(); renderBeautify();
+  applyTheme(); applyCustomBubbleCSSToPage(); renderBeautify();
 }
 function applyTheme(){
   document.documentElement.style.setProperty('--rouge', themeSettings.accent);
@@ -4330,14 +4277,6 @@ function applyTheme(){
       ac.style.backgroundColor = 'transparent';
     } else if(themeSettings.annivBg){
       ac.style.background = themeSettings.annivBg;
-    }
-    if(themeSettings.annivCustomCss){
-      // 把用户自定义声明追加进去
-      const parts = themeSettings.annivCustomCss.split(';').map(s=>s.trim()).filter(Boolean);
-      parts.forEach(p=>{
-        const [k, ...rest] = p.split(':');
-        if(k && rest.length) ac.style.setProperty(k.trim(), rest.join(':').trim());
-      });
     }
   }
   applyChatBackground();
@@ -4940,23 +4879,7 @@ async function clearAnnivCardBg(){
   await sSet('theme-settings', themeSettings);
   applyTheme();
 }
-async function applyAnnivCustomCss(){
-  const ta = document.getElementById('annivCustomCss');
-  themeSettings.annivCustomCss = (ta && ta.value) ? ta.value.trim() : '';
-  await sSet('theme-settings', themeSettings);
-  applyTheme();
-  alert('卡片样式已应用');
-}
-async function clearAnnivCustomCss(){
-  themeSettings.annivCustomCss = '';
-  const ta = document.getElementById('annivCustomCss');
-  if(ta) ta.value = '';
-  await sSet('theme-settings', themeSettings);
-  // 重新应用主题以清除内联
-  const ac = document.querySelector('.anniv-card');
-  if(ac){ ac.removeAttribute('style'); }
-  applyTheme();
-}
+
 
 
 /* ============================================================
