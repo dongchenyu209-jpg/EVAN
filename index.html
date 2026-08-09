@@ -1743,17 +1743,30 @@ async function compressImage(dataUrl, maxWidth = 800) {
 }
 // ==================== 结束 ====================
 /* ============================================================
-   今日状态：自由导入一批状态，每天自动帮你挑一个显示
+   今日状态：自由导入一批状态，一天内随机时机自动换一个显示
+   ------------------------------------------------------------
+   不用 setInterval 定时触发——App 切到后台时定时器会被系统暂停（跟之前
+   主动消息打字指示器踩过的坑一样），定时器到点了也不会真的执行。
+   改成"记录下次该变的时间点，每次有机会渲染时顺便检查一下有没有到点"，
+   这样哪怕 App 被搁置很久，一打开就能立刻补上该有的变化。
    ============================================================ */
 function todayKey(){
   const d = new Date();
   return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
 }
+function pickRandomStatusText(){
+  return statusPool[Math.floor(Math.random()*statusPool.length)];
+}
+function nextStatusChangeDelay(){
+  const minH = 3, maxH = 6; // 3~6小时之间随机一个间隔
+  return (minH + Math.random()*(maxH-minH)) * 3600 * 1000;
+}
 function ensureTodayStatus(){
   const key = todayKey();
-  if(!todayStatus || todayStatus.date !== key){
+  const due = !todayStatus || todayStatus.date !== key || !todayStatus.nextChangeAt || Date.now() >= todayStatus.nextChangeAt;
+  if(due){
     if(statusPool.length > 0){
-      todayStatus = { date:key, text: statusPool[Math.floor(Math.random()*statusPool.length)] };
+      todayStatus = { date:key, text: pickRandomStatusText(), nextChangeAt: Date.now() + nextStatusChangeDelay() };
       sSet('today-status', todayStatus);
     } else {
       todayStatus = null;
@@ -1826,11 +1839,20 @@ async function deleteStatus(i){
 }
 async function rerollTodayStatus(){
   if(statusPool.length===0) return;
-  todayStatus = { date: todayKey(), text: statusPool[Math.floor(Math.random()*statusPool.length)] };
+  todayStatus = { date: todayKey(), text: pickRandomStatusText(), nextChangeAt: Date.now() + nextStatusChangeDelay() };
   await sSet('today-status', todayStatus);
   renderTodayStatusHome();
   openTodayStatusPanel();
 }
+// App 从后台切回前台、或长时间停留在前台时，顺手检查一下状态是否到点该换了
+function refreshTodayStatusIfDue(){
+  ensureTodayStatus();
+  renderTodayStatusHome();
+  const chatStatEl = document.getElementById('chatCStat');
+  if(chatStatEl && currentView==='chat') chatStatEl.textContent = todayStatus ? todayStatus.text : '暂无状态';
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') refreshTodayStatusIfDue(); });
+setInterval(refreshTodayStatusIfDue, 10*60*1000); // 前台长时间停留时，每 10 分钟兜底检查一次
 
 
 function normalizeCardsJson(raw){
