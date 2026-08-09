@@ -14,7 +14,7 @@
     --paper-2:#EBE4D5;
     --ink:#2A241F;
     --ink-soft:#75695B;
-    --rule:#CBBFA6;
+    --rule:rgba(210,178,168,0.45);
     --rouge:#9C2F3B;
     --rouge-deep:#7A2530;
     --blush:#E9CFC7;
@@ -95,7 +95,7 @@
     box-shadow:0 4px 10px rgba(122,37,48,0.4), 0 1px 0 rgba(255,255,255,0.15) inset;
     line-height:1.1;
   }
-  .stitch{ border-top:2px dashed var(--rule); margin:14px 0; position:relative; }
+  .stitch{ border-top:1px dashed var(--rule); margin:14px 0; position:relative; }
   .stitch::before{
     content:'♡ LOVE ♡'; position:absolute; top:-10px; left:50%; transform:translateX(-50%);
     background:var(--paper); padding:0 10px; font-family:'Noto Serif SC',serif; font-weight:700; font-size:12px; letter-spacing:3px; color:var(--rouge);
@@ -155,7 +155,7 @@
     margin-top:12px; font-family:'Ma Shan Zheng',cursive; font-size:16px; color:var(--ink);
     cursor:pointer; text-align:center; padding:2px 10px; border-bottom:1px dashed var(--rule);
   }
-  .diary-divider-line{ border-top:1.5px dashed var(--rule); margin:18px 0; position:relative; }
+  .diary-divider-line{ border-top:none; margin:26px 0; position:relative; }
   .love-row{ text-align:center; font-family:'Noto Serif SC',serif; font-size:16px; letter-spacing:2px; }
   .love-row .love-word{ color:var(--rouge); font-weight:900; }
   .love-row .bond-pct{ font-weight:900; }
@@ -208,7 +208,7 @@
   .dli-icon{ font-size:16px; width:22px; text-align:center; flex-shrink:0; position:relative; }
   .dli-label{ flex:1; }
   .dli-arrow{ color:var(--ink-soft); font-size:16px; }
-  .diary-divider{ border-top:1px dashed var(--rule); margin:0 14px; }
+  .diary-divider{ border-top:none; margin:0 14px; }
   .photo-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
   .photo-grid .ph-item{ position:relative; aspect-ratio:1/1; border:1px solid var(--ink); overflow:hidden; background:var(--paper-2); }
   .photo-grid .ph-item img{ width:100%; height:100%; object-fit:cover; }
@@ -1515,20 +1515,20 @@ function renderHomeProfile(){
   const caption = document.getElementById('polaroidCaption');
   if(caption) caption.textContent = profile.status || '「跌入你的宇宙。」';
   const ph = document.getElementById('polaroidPh');
-  if(ph) ph.innerHTML = profile.photo ? `<img src="${profile.photo}">` : '点击上传';
+  if(ph) ph.innerHTML = profile.photo ? `<img loading="lazy" decoding="async" src="${profile.photo}">` : '点击上传';
   document.getElementById('chatCName').textContent = chatSettings.companionName;
   document.getElementById('chatTitle').textContent = '传讯 · '+chatSettings.companionName;
   const chatAvatarEl = document.getElementById('chatAvatarBox');
-  if(chatAvatarEl) chatAvatarEl.innerHTML = profile.avatar && profile.avatar.startsWith('data:') ? `<img src="${profile.avatar}">` : (profile.avatar||'🌙');
+  if(chatAvatarEl) chatAvatarEl.innerHTML = profile.avatar && profile.avatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.avatar}">` : (profile.avatar||'🌙');
   renderMomentsHeader();
   renderAnniversary();
 }
 /* ---- 纪念日：头像跟朋友圈/传讯用的是同一份数据，改一处三处都会同步 ---- */
 function renderAnniversary(){
   const mineEl = document.getElementById('annivMyAvatar');
-  if(mineEl) mineEl.innerHTML = profile.myAvatar && profile.myAvatar.startsWith('data:') ? `<img src="${profile.myAvatar}">` : (profile.myAvatar||'🙂');
+  if(mineEl) mineEl.innerHTML = profile.myAvatar && profile.myAvatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.myAvatar}">` : (profile.myAvatar||'🙂');
   const theirEl = document.getElementById('annivTheirAvatar');
-  if(theirEl) theirEl.innerHTML = profile.avatar && profile.avatar.startsWith('data:') ? `<img src="${profile.avatar}">` : (profile.avatar||'🌙');
+  if(theirEl) theirEl.innerHTML = profile.avatar && profile.avatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.avatar}">` : (profile.avatar||'🌙');
   const theirNameEl = document.getElementById('annivTheirName');
   if(theirNameEl) theirNameEl.textContent = profile.name;
   const myNameEl = document.getElementById('annivMyName');
@@ -1617,7 +1617,7 @@ function renderMomentsHeader(){
   const cover = document.getElementById('momentsCover');
   if(cover) cover.style.backgroundImage = profile.momentsCover ? `url(${profile.momentsCover})` : '';
   const av = document.getElementById('momentsAvatarBox');
-  if(av) av.innerHTML = profile.myAvatar && profile.myAvatar.startsWith('data:') ? `<img src="${profile.myAvatar}">` : (profile.myAvatar||'🙂');
+  if(av) av.innerHTML = profile.myAvatar && profile.myAvatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.myAvatar}">` : (profile.myAvatar||'🙂');
   const nm = document.getElementById('momentsNameLabel');
   if(nm) nm.textContent = profile.myName || '我';
   const bio = document.getElementById('momentsBioLabel');
@@ -1710,7 +1710,7 @@ function renderLifePhotos(){
   const moreBtn = !pageState.lifePhotos.exhausted ? `<div class="load-more-bar" onclick="loadMoreLifePhotos()">加载更早的照片 ↓</div>` : '';
   wrap.innerHTML = lifePhotos.length
     ? lifePhotos.map(p=>
-        `<div class="ph-item"><img src="${p.src}"><div class="del" onclick="deleteLifePhoto('${p.id}')">✕</div></div>`
+        `<div class="ph-item"><img loading="lazy" decoding="async" src="${p.src}"><div class="del" onclick="deleteLifePhoto('${p.id}')">✕</div></div>`
       ).join('') + moreBtn
     : '<div class="empty-note">还没有照片，点下面加一张吧</div>';
 }
@@ -2204,8 +2204,8 @@ function renderChat(preserveScroll, scrollToId){
   }
   const prevScrollHeight = preserveScroll ? wrap.scrollHeight : 0;
   const prevScrollTop = preserveScroll ? wrap.scrollTop : 0;
-  const botAvatar = profile.avatar && profile.avatar.startsWith('data:') ? `<img src="${profile.avatar}">` : (profile.avatar||'🌙');
-  const myAvatar = profile.myAvatar && profile.myAvatar.startsWith('data:') ? `<img src="${profile.myAvatar}">` : (profile.myAvatar||'🙂');
+  const botAvatar = profile.avatar && profile.avatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.avatar}">` : (profile.avatar||'🌙');
+  const myAvatar = profile.myAvatar && profile.myAvatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.myAvatar}">` : (profile.myAvatar||'🙂');
   const loadMoreHtml = !pageState.chatMessages.exhausted ? `<div class="load-more-bar" onclick="loadMoreChat()">↑ 加载更早的聊天记录</div>` : '';
   wrap.innerHTML = loadMoreHtml + chatMessages.map(m=>{
     const time = formatMsgTime(m.time);
@@ -2218,10 +2218,10 @@ function renderChat(preserveScroll, scrollToId){
     const avatarHtml = `<div class="msg-avatar">${m.from==='user'?myAvatar:botAvatar}</div>`;
     let bubbleHtml;
     if(m.type==='sticker'){
-      const val = m.content.startsWith('data:') ? `<img src="${m.content}">` : m.content;
+      const val = m.content.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${m.content}">` : m.content;
       bubbleHtml = `<div class="msg sticker ${m.from}">${quoteRefHtml}${val}<div class="t" style="text-align:${m.from==='user'?'right':'left'};">${time}${quoteBtn}</div></div>`;
     } else if(m.type==='image'){
-      bubbleHtml = `<div class="msg image ${m.from}">${quoteRefHtml}<img class="chat-image" src="${m.content}" onclick="viewChatImage('${m.id}')"><div class="t" style="text-align:${m.from==='user'?'right':'left'};">${time}${(m.from==='user'&&m.read)?' · 已读':''}${quoteBtn}</div></div>`;
+      bubbleHtml = `<div class="msg image ${m.from}">${quoteRefHtml}<img loading="lazy" decoding="async" class="chat-image" src="${m.content}" onclick="viewChatImage('${m.id}')"><div class="t" style="text-align:${m.from==='user'?'right':'left'};">${time}${(m.from==='user'&&m.read)?' · 已读':''}${quoteBtn}</div></div>`;
     } else if(m.type==='redpacket'){
       const revealed = m.from==='user' || m.opened;
       const tapAttr = revealed ? '' : `onclick="openRedPacket('${m.id}')"`;
@@ -2319,7 +2319,7 @@ function viewChatImage(id){
   if(!m) return;
   openOverlay(`
     <div class="drawer-head"><h3>图片</h3><span class="close-x" onclick="closeOverlay()">✕</span></div>
-    <img src="${m.content}" style="width:100%; border-radius:6px;">
+    <img loading="lazy" decoding="async" src="${m.content}" style="width:100%; border-radius:6px;">
   `);
 }
 function setQuoteTarget(id){
@@ -2780,14 +2780,14 @@ async function endCall(reason){
 function showCallOverlay(){
   const box = document.getElementById('callAvatarBox');
   const theirPic = profile.avatar && profile.avatar.startsWith('data:') ? profile.avatar : null;
-  box.innerHTML = theirPic ? `<img src="${theirPic}">` : (profile.avatar||'🌙');
+  box.innerHTML = theirPic ? `<img loading="lazy" decoding="async" src="${theirPic}">` : (profile.avatar||'🌙');
   const bg = document.getElementById('callVideoBg');
   if(bg) bg.style.backgroundImage = theirPic ? `url('${theirPic}')` : 'none';
   const pip = document.getElementById('callSelfPip');
   if(pip){
     pip.classList.remove('cam-off');
     const myPic = profile.myAvatar && profile.myAvatar.startsWith('data:') ? profile.myAvatar : null;
-    pip.innerHTML = myPic ? `<img src="${myPic}">` : (profile.myAvatar||'🙂');
+    pip.innerHTML = myPic ? `<img loading="lazy" decoding="async" src="${myPic}">` : (profile.myAvatar||'🙂');
   }
   document.getElementById('callNameLabel').textContent = chatSettings.companionName;
   document.getElementById('callOverlay').classList.remove('hidden');
@@ -2878,7 +2878,7 @@ function openChatSettings(){
 function renderStickerChips(){
   if(chatSettings.stickers.length===0) return '<div class="empty-note">还没有表情包</div>';
   return chatSettings.stickers.map(s=>{
-    const disp = s.type==='emoji' ? s.value : `<img src="${s.value}" style="width:20px;height:20px;vertical-align:middle;">`;
+    const disp = s.type==='emoji' ? s.value : `<img loading="lazy" decoding="async" src="${s.value}" style="width:20px;height:20px;vertical-align:middle;">`;
     return `<span class="chip">${disp}<span class="x" onclick="removeSticker('${s.id}')">✕</span></span>`;
   }).join('');
 }
@@ -3018,7 +3018,7 @@ function openStickerPicker(){
   openOverlay(`
     <div class="drawer-head"><h3>发送表情包</h3><span class="close-x" onclick="closeOverlay()">✕</span></div>
     <div>${chatSettings.stickers.map(s=>{
-      const disp = s.type==='emoji' ? `<span style="font-size:30px;">${s.value}</span>` : `<img src="${s.value}" style="width:44px;height:44px;object-fit:contain;">`;
+      const disp = s.type==='emoji' ? `<span style="font-size:30px;">${s.value}</span>` : `<img loading="lazy" decoding="async" src="${s.value}" style="width:44px;height:44px;object-fit:contain;">`;
       return `<span class="chip" style="padding:8px;" onclick='sendStickerMsg(${JSON.stringify(s.value)})'>${disp}</span>`;
     }).join('')}</div>
   `);
@@ -3539,7 +3539,7 @@ function onMomentMedia(e){
     if(!prev) return;
     const inner = isVideo
       ? `<video src="${momentDraftMedia.src}" style="width:100%;border-radius:4px;" controls></video>`
-      : `<img src="${momentDraftMedia.src}" style="width:100%;border-radius:4px;">`;
+      : `<img loading="lazy" decoding="async" src="${momentDraftMedia.src}" style="width:100%;border-radius:4px;">`;
     prev.innerHTML = `<div style="position:relative;margin-top:8px;">${inner}
        <span class="del" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.5);color:#fff;border-radius:50%;padding:2px 7px;" onclick="clearMomentMedia()">✕</span></div>`;
   };
@@ -3672,9 +3672,9 @@ async function addMomentComment(id){
 function renderMoments(){
   const wrap = document.getElementById('momentsList');
   if(!wrap) return;
-  const myAvatar = profile.myAvatar && profile.myAvatar.startsWith('data:') ? `<img src="${profile.myAvatar}">` : (profile.myAvatar||'🙂');
+  const myAvatar = profile.myAvatar && profile.myAvatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.myAvatar}">` : (profile.myAvatar||'🙂');
   const myName = profile.myName || '我';
-  const taAvatar = profile.avatar && profile.avatar.startsWith('data:') ? `<img src="${profile.avatar}">` : (profile.avatar||'🌙');
+  const taAvatar = profile.avatar && profile.avatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.avatar}">` : (profile.avatar||'🌙');
   wrap.innerHTML = momentsPosts.length ? momentsPosts.map(p=>{
     const isBot = p.authorType==='bot';
     const avatar = isBot ? taAvatar : myAvatar;
@@ -3700,7 +3700,7 @@ function renderMoments(){
       <div class="moment-body">
         <div class="moment-name">${name}</div>
         ${p.text?`<div class="moment-text">${p.text}</div>`:''}
-        ${p.photo?`<img class="moment-photo" src="${p.photo}">`:''}
+        ${p.photo?`<img loading="lazy" decoding="async" class="moment-photo" src="${p.photo}">`:''}
         ${p.video?`<video class="moment-photo" src="${p.video}" controls></video>`:''}
         <div class="moment-meta">${new Date(p.time).toLocaleString('zh-CN')}</div>
         <div class="moment-actions">${likeBtn}</div>
@@ -3977,7 +3977,7 @@ function fillSettingsForm(){
   document.getElementById('setAvatar').value = isImg ? '' : (profile.avatar||'');
   const prev = document.getElementById('avatarPreviewSettings');
   prev.innerHTML = isImg
-    ? `<div style="display:flex;align-items:center;gap:10px;"><img src="${profile.avatar}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:1.5px solid var(--ink);"><span class="btn outline" style="padding:6px 10px;font-size:11px;" onclick="clearAvatarImage()">改用 Emoji</span></div>`
+    ? `<div style="display:flex;align-items:center;gap:10px;"><img loading="lazy" decoding="async" src="${profile.avatar}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:1.5px solid var(--ink);"><span class="btn outline" style="padding:6px 10px;font-size:11px;" onclick="clearAvatarImage()">改用 Emoji</span></div>`
     : '';
 }
 async function clearAvatarImage(){
