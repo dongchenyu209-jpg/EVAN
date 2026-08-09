@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="color-scheme" content="light">
-<title>在一起的每一天</title>
+<title>Charlie的幸福日常</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Noto+Sans+SC:wght@400;500;700&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
 <style>
@@ -14,7 +14,7 @@
     --paper-2:#EBE4D5;
     --ink:#2A241F;
     --ink-soft:#75695B;
-    --rule:rgba(210,178,168,0.45);
+    --rule:#CBBFA6;
     --rouge:#9C2F3B;
     --rouge-deep:#7A2530;
     --blush:#E9CFC7;
@@ -31,7 +31,7 @@
       linear-gradient(var(--rule) 1px, transparent 1px),
       linear-gradient(90deg, var(--rule) 1px, transparent 1px);
     background-size: 22px 22px;
-    background-attachment: fixed;
+    background-attachment: scroll;
     color:var(--ink);
     font-family: var(--font-body, 'Noto Sans SC', sans-serif);
     min-height:100vh;
@@ -44,7 +44,7 @@
     background-image: var(--page-bg-image, none);
     background-size: cover;
     background-position: center;
-    background-attachment: fixed;
+    background-attachment: scroll;
     filter: blur(1px);
     transform: scale(1.01);
     pointer-events: none;
@@ -95,7 +95,7 @@
     box-shadow:0 4px 10px rgba(122,37,48,0.4), 0 1px 0 rgba(255,255,255,0.15) inset;
     line-height:1.1;
   }
-  .stitch{ border-top:1px dashed var(--rule); margin:14px 0; position:relative; }
+  .stitch{ border-top:2px dashed var(--rule); margin:14px 0; position:relative; }
   .stitch::before{
     content:'♡ LOVE ♡'; position:absolute; top:-10px; left:50%; transform:translateX(-50%);
     background:var(--paper); padding:0 10px; font-family:'Noto Serif SC',serif; font-weight:700; font-size:12px; letter-spacing:3px; color:var(--rouge);
@@ -155,7 +155,7 @@
     margin-top:12px; font-family:'Ma Shan Zheng',cursive; font-size:16px; color:var(--ink);
     cursor:pointer; text-align:center; padding:2px 10px; border-bottom:1px dashed var(--rule);
   }
-  .diary-divider-line{ border-top:none; margin:26px 0; position:relative; }
+  .diary-divider-line{ border-top:1.5px dashed var(--rule); margin:18px 0; position:relative; }
   .love-row{ text-align:center; font-family:'Noto Serif SC',serif; font-size:16px; letter-spacing:2px; }
   .love-row .love-word{ color:var(--rouge); font-weight:900; }
   .love-row .bond-pct{ font-weight:900; }
@@ -168,7 +168,7 @@
   }
   .anniv-card::before{
     content:'♡ love diary ♡'; position:absolute; top:-11px; left:50%; transform:translateX(-50%);
-    background:rgba(255,255,255,0.88); padding:0 12px; color:var(--rouge); font-family:'Noto Serif SC',serif;
+    background:var(--paper); padding:0 12px; color:var(--rouge); font-family:'Noto Serif SC',serif;
     font-weight:700; font-size:11px; letter-spacing:2px; white-space:nowrap;
   }
   .anniv-row{ display:flex; flex-direction:column; align-items:center; }
@@ -208,7 +208,7 @@
   .dli-icon{ font-size:16px; width:22px; text-align:center; flex-shrink:0; position:relative; }
   .dli-label{ flex:1; }
   .dli-arrow{ color:var(--ink-soft); font-size:16px; }
-  .diary-divider{ border-top:none; margin:0 14px; }
+  .diary-divider{ border-top:1px dashed var(--rule); margin:0 14px; }
   .photo-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
   .photo-grid .ph-item{ position:relative; aspect-ratio:1/1; border:1px solid var(--ink); overflow:hidden; background:var(--paper-2); }
   .photo-grid .ph-item img{ width:100%; height:100%; object-fit:cover; }
@@ -259,6 +259,7 @@
 
   /* generic card/list */
   .box{ border:1.5px solid var(--ink); background:var(--glass-bg); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); padding:14px; margin-bottom:14px; box-shadow: none; }
+  .card-reply-box{ border:1.5px solid rgba(156,47,59,0.18); background:rgba(156,47,59,0.06); border-radius:16px; padding:16px 18px; font-size:14.5px; line-height:1.7; color:var(--ink); }
   .box-title{ font-family:'Noto Serif SC',serif; font-weight:700; font-size:14px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;}
   label.field{ display:block; font-size:12px; color:var(--ink-soft); margin:10px 0 4px; }
   input[type=text], input[type=number], input[type=date], select, textarea{
@@ -520,12 +521,50 @@
   .call-bubble-dot{ width:7px;height:7px;border-radius:50%; background:#4CD964; animation: pulseDot 1.2s infinite; flex-shrink:0; }
   @keyframes pulseDot{ 0%,100%{opacity:1;} 50%{opacity:.3;} }
 
-/* 玻璃质感微调：仅调整玻璃视觉 */
-.glass, .glass-card, .glass-panel, .card, .panel {
-  background-color: rgba(255,255,255,0.58) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-}
+
+/* ===== Charlie Home Redesign ===== */
+.home-redesign{padding-top:4px;}
+.cr-top{text-align:center;padding:10px 8px 14px;}
+.cr-time{font-family:Georgia,'Times New Roman',serif;font-size:48px;line-height:1;font-weight:400;letter-spacing:1px;color:#6e6570;}
+.cr-date{margin-top:6px;font-size:12px;letter-spacing:1px;color:#938995;}
+.cr-spark{display:inline-block;margin-left:5px;font-size:13px;color:#b59bb2;}
+.cr-couple{margin:4px auto 14px;display:flex;align-items:center;justify-content:center;gap:12px;}
+.cr-avatar{width:64px;height:64px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.45);border:2px solid rgba(255,255,255,.8);box-shadow:0 4px 14px rgba(126,105,120,.13);font-size:27px;}
+.cr-avatar img{width:100%;height:100%;object-fit:cover;}
+.cr-profile-unit{display:flex;flex-direction:column;align-items:center;min-width:82px;}
+.cr-profile-name{font-size:11px;font-weight:700;color:#81737f;margin-top:6px;letter-spacing:.4px;}
+.cr-status-pill{display:flex;align-items:center;gap:4px;max-width:120px;margin-top:3px;padding:3px 8px;border:1px solid rgba(255,255,255,.7);border-radius:999px;background:rgba(255,255,255,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.cr-status-dot{width:5px;height:5px;border-radius:50%;background:#d98ba5;box-shadow:0 0 0 2px rgba(217,139,165,.12);flex:0 0 auto;}
+.cr-status-dot.me{background:#9da8c9;box-shadow:0 0 0 2px rgba(157,168,201,.12);}
+.cr-profile-status{font-size:9px;color:#988c97;max-width:100px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:0;}
+
+.cr-heart{font-size:23px;color:#d889a4;filter:drop-shadow(0 2px 4px rgba(200,120,150,.18));}
+.cr-info-row{display:grid;grid-template-columns:.9fr 1.1fr;gap:10px;margin-bottom:18px;align-items:stretch;}
+.cr-info-card{cursor:pointer;min-height:92px;border:1px solid rgba(255,255,255,.75);background:rgba(255,255,255,.38);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:24px;padding:14px 11px;text-align:center;box-shadow:0 8px 22px rgba(125,105,125,.09);position:relative;overflow:hidden;}
+.cr-info-title{font-size:11px;color:#9a8f99;letter-spacing:.5px;}
+.cr-days{font-family:Georgia,'Times New Roman',serif;font-size:30px;color:#8c7387;line-height:1.05;margin-top:4px;}
+.cr-days-unit{font-family:'Noto Sans SC',sans-serif;font-size:11px;color:#9a8f99;letter-spacing:2px;}
+.cr-memory-top{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:1px;color:#9a8f99;text-align:left;}
+.cr-memory-icon{font-size:15px;color:#bd91aa;}
+.cr-memory-arrow{margin-left:auto;font-size:13px;color:#b5a2b1;}
+.cr-memory-text{font-family:'Noto Serif SC',serif;font-size:13px;line-height:1.5;color:#7f7480;text-align:left;margin-top:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.cr-memory-date{font-size:9px;color:#aaa0a9;text-align:left;margin-top:5px;letter-spacing:.5px;}
+.cr-section-title{display:flex;align-items:center;justify-content:center;gap:8px;font-size:9.5px;color:#a0949e;letter-spacing:2.5px;text-align:center;margin:4px 0 14px;}
+.cr-section-title i{font-style:normal;color:#c99bb1;font-size:11px;}
+.cr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 8px;margin:0 2px 22px;}
+.cr-item{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;min-width:0;}
+.cr-icon{width:54px;height:54px;border-radius:18px;border:1px solid rgba(255,255,255,.78);background:rgba(255,255,255,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;font-size:22px;color:#9c8998;box-shadow:0 4px 13px rgba(130,110,130,.07);transition:transform .12s,background .12s;position:relative;}
+.cr-item:active .cr-icon{transform:scale(.91);background:rgba(255,255,255,.58);}
+.cr-label{font-size:10.5px;color:#8d828d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:74px;text-align:center;}
+.cr-badge{position:absolute;right:-2px;top:-3px;width:10px;height:10px;border-radius:50%;background:#d889a4;border:2px solid rgba(255,255,255,.85);}
+.cr-note{margin:2px 5px 8px;padding:16px 18px 20px;min-height:112px;border-radius:22px;background:rgba(255,255,255,.26);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);position:relative;overflow:hidden;}
+.cr-note::before{content:'✦';position:absolute;left:13px;top:8px;color:#b9a0b5;font-size:13px;}
+.cr-note::after{content:'♡';position:absolute;right:16px;bottom:8px;color:#c6a7ba;font-size:21px;transform:rotate(-12deg);}
+.cr-note-text{font-family:'Ma Shan Zheng',cursive;font-size:21px;line-height:1.4;color:#8f7789;transform:rotate(-2deg);margin:12px 15px 0;}
+.cr-note-sub{font-size:9px;letter-spacing:2px;color:#b1a5af;margin:9px 16px 0;}
+.cr-compat{display:none!important;}
+@media(max-width:360px){.cr-grid{gap:16px 4px}.cr-icon{width:50px;height:50px}.cr-time{font-size:44px}}
+
 </style>
 </head>
 <body>
@@ -539,7 +578,7 @@
       <div class="call-self-pip" id="callSelfPip">🙂</div>
     </div>
     <div class="call-info">
-      <div class="call-name" id="callNameLabel">陆沉</div>
+      <div class="call-name" id="callNameLabel">Charlie</div>
       <div class="call-status" id="callStatusLabel">正在呼叫…</div>
       <div class="call-timer hidden" id="callTimerLabel">00:00</div>
     </div>
@@ -551,90 +590,66 @@
   </div>
 
   <!-- ============ HOME ============ -->
-  <section id="view-home" class="view">
-    <div class="topbar">
-      <div class="tb-left"><span class="stamp-tag">DIARY</span></div>
-      <div class="hero-name" id="pNameHero">陆沉</div>
-      <div class="icon-btn" onclick="go('settings')">⚙️</div>
+  <section id="view-home" class="view home-redesign">
+    <div class="cr-top">
+      <div class="cr-time" id="crClock">16:10</div>
+      <div class="cr-date" id="crDate">7月28日 星期二 <span class="cr-spark">✦</span></div>
     </div>
 
-    <div class="anniv-card" id="annivCardEl">
-      <div style="position:absolute;top:6px;right:8px;font-size:12px;cursor:pointer;opacity:.6;" onclick="editAnnivCardBg()" title="修改卡片背景">🎨</div>
-      <div class="anniv-row">
-        <div class="anniv-avatars">
-          <div class="anniv-slot">
-            <div class="anniv-avatar theirs" id="annivTheirAvatar" onclick="document.getElementById('avatarFileInput').click()">🌙</div>
-            <div class="anniv-name" id="annivTheirName" onclick="editTheirName()">陆沉</div>
-          </div>
-          <div class="anniv-heart">❤</div>
-          <div class="anniv-slot">
-            <div class="anniv-avatar mine" id="annivMyAvatar" onclick="document.getElementById('myAvatarFileInput').click()">🙂</div>
-            <div class="anniv-name" id="annivMyName" onclick="editMyName()">我</div>
-          </div>
-        </div>
-        <div class="anniv-text" onclick="editAnniversaryDate()">在一起 <b id="annivDaysText">0</b> 天</div>
+    <div class="cr-couple">
+      <div class="cr-profile-unit">
+        <div class="cr-avatar" id="annivTheirAvatar" onclick="document.getElementById('avatarFileInput').click()">🌙</div>
+        <div class="cr-profile-name" id="crTheirName">Charlie</div>
+        <div class="cr-status-pill"><span class="cr-status-dot"></span><span class="cr-profile-status" id="crTheirStatus">跌入你的宇宙 ☆°｡</span></div>
+      </div>
+      <div class="cr-heart">❤</div>
+      <div class="cr-profile-unit">
+        <div class="cr-avatar" id="annivMyAvatar" onclick="document.getElementById('myAvatarFileInput').click()">🙂</div>
+        <div class="cr-profile-name" id="crMyName">我</div>
+        <div class="cr-status-pill" onclick="editMyStatus()" role="button" tabindex="0"><span class="cr-status-dot me"></span><span class="cr-profile-status" id="crMyStatus">今天也在发光</span></div>
       </div>
     </div>
 
-    <div class="diary-divider-line"></div>
-
-    <div class="polaroid-hero">
-      <div class="polaroid large">
-        <div class="ph" id="polaroidPh" onclick="document.getElementById('photoInput').click()">点击上传</div>
-        <div class="cap">My love.</div>
+    <div class="cr-info-row">
+      <div class="cr-info-card" id="annivCardEl" onclick="editAnniversaryDate()" role="button" tabindex="0">
+        <div class="cr-info-title">与TA相识的第</div>
+        <div class="cr-days"><span id="annivDaysText">0</span></div>
+        <div class="cr-days-unit">天</div>
       </div>
-      <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="onPhotoUpload(event)">
-      <div class="hero-caption" id="polaroidCaption" onclick="editPolaroidCaption()">「跌入你的宇宙。」</div>
-    </div>
-
-    <div class="diary-divider-line"></div>
-
-    <div class="love-row">❤️ <span class="love-word">LOVE</span> <span class="bond-pct" id="bondPctText">100%</span></div>
-
-    <div class="diary-divider-line"></div>
-
-    <div class="memory-label">🎞 memory</div>
-    <div class="search-bar">
-      <span>🔍</span>
-      <input type="text" id="searchInput" placeholder="搜索聊天回忆…" onkeydown="if(event.key==='Enter')doSearch()">
-      <div class="go-btn" onclick="doSearch()">GO</div>
-    </div>
-    <div class="search-results" id="searchResults"></div>
-
-    <div class="diary-divider-line"></div>
-
-    <div class="diary-list">
-      <div class="diary-list-item" onclick="go('lifephotos')">
-        <span class="dli-icon">📎</span><span class="dli-label">生活照片</span><span class="dli-arrow">›</span>
-      </div>
-      <div class="diary-divider"></div>
-      <div class="diary-list-item" onclick="openTodayStatusPanel()">
-        <span class="dli-icon">🎬</span><span class="dli-label">今日状态：<b id="todayStatusText">暂无</b></span><span class="dli-arrow">›</span>
-      </div>
-      <div class="diary-divider"></div>
-      <div class="diary-list-item" onclick="go('moments')">
-        <span class="dli-icon">📷<span id="momentsDot" class="dot-badge hidden"></span></span><span class="dli-label">朋友圈</span><span class="dli-arrow">›</span>
-      </div>
-      <div class="diary-divider"></div>
-      <div class="diary-list-item" onclick="go('cards')">
-        <span class="dli-icon">🎴</span><span class="dli-label">字卡</span><span class="dli-arrow">›</span>
-      </div>
-      <div class="diary-divider"></div>
-      <div class="diary-list-item" onclick="openMoyuNotePanel()">
-        <span class="dli-icon">🐟</span><span class="dli-label">摸鱼小记：<b id="moyuLatestText">暂无</b></span><span class="dli-arrow">›</span>
+      <div class="cr-info-card cr-memory-card" onclick="openMoyuNotePanel()" role="button" tabindex="0">
+        <div class="cr-memory-top"><span class="cr-memory-icon">🐟</span><span>摸鱼小记</span><span class="cr-memory-arrow">↗</span></div>
+        <div class="cr-memory-text" id="moyuLatestText">暂无记录</div>
       </div>
     </div>
 
-    <div class="diary-divider-line"></div>
-
-    <div class="grid8">
-      <div class="fn-item" onclick="go('chat')"><div class="fn-icon">✉️<span id="chatDot" class="dot-badge hidden"></span></div><div class="fn-label">传讯</div></div>
-      <div class="fn-item" onclick="go('letters')"><div class="fn-icon">📮<span id="letterDot" class="dot-badge hidden"></span></div><div class="fn-label">写信</div></div>
-      <div class="fn-item" onclick="go('inboxLetters')"><div class="fn-icon">📬<span id="inboxLetterDot" class="dot-badge hidden"></span></div><div class="fn-label">来信</div></div>
-      <div class="fn-item" onclick="go('ledger')"><div class="fn-icon">⏳</div><div class="fn-label">记账</div></div>
-      <div class="fn-item" onclick="go('companion')"><div class="fn-icon">📋</div><div class="fn-label">陪伴记录</div></div>
-      <div class="fn-item" onclick="go('settings')"><div class="fn-icon">⚙️</div><div class="fn-label">设置</div></div>
+    <div class="cr-note" onclick="editPolaroidCaption()">
+      <div class="cr-note-text" id="polaroidCaption">Charlie, want to play with you.</div>
+      <div class="cr-note-sub">COW CAT · CHARLIE'S LITTLE NOTE</div>
     </div>
+
+    <div class="cr-section-title"><span>OUR LITTLE UNIVERSE</span><i>✦</i></div>
+    <div class="cr-grid">
+      <div class="cr-item" onclick="go('chat')"><div class="cr-icon">💬<span id="chatDot" class="cr-badge hidden"></span></div><div class="cr-label">传讯</div></div>
+      <div class="cr-item" onclick="go('moments')"><div class="cr-icon">🌐<span id="momentsDot" class="cr-badge hidden"></span></div><div class="cr-label">朋友圈</div></div>
+      <div class="cr-item" onclick="go('letters')"><div class="cr-icon">✉️<span id="letterDot" class="cr-badge hidden"></span></div><div class="cr-label">写信</div></div>
+      <div class="cr-item" onclick="go('inboxLetters')"><div class="cr-icon">💌<span id="inboxLetterDot" class="cr-badge hidden"></span></div><div class="cr-label">来信</div></div>
+      <div class="cr-item" onclick="go('lifephotos')"><div class="cr-icon">📷</div><div class="cr-label">生活照片</div></div>
+      <div class="cr-item" onclick="go('cards')"><div class="cr-icon">🎴</div><div class="cr-label">字卡</div></div>
+      <div class="cr-item" onclick="openTodayStatusPanel()"><div class="cr-icon">🎬</div><div class="cr-label">今日状态</div></div>
+      <div class="cr-item" onclick="go('ledger')"><div class="cr-icon">💰</div><div class="cr-label">记账</div></div>
+      <div class="cr-item" onclick="go('companion')"><div class="cr-icon">📋</div><div class="cr-label">陪伴记录</div></div>
+      <div class="cr-item" onclick="go('settings')"><div class="cr-icon">⚙️</div><div class="cr-label">设置</div></div>
+    </div>
+
+    <!-- compatibility elements kept for existing logic -->
+    <div class="cr-compat">
+      <div id="pNameHero">Charlie</div>
+      <div id="annivTheirName">Charlie</div><div id="annivMyName">我</div>
+      <div id="bondPctText">100%</div>
+      <input id="searchInput"><div id="searchResults"></div>
+      <div id="polaroidPh">点击上传</div>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="onPhotoUpload(event)">
   </section>
 
   <!-- ============ LIFE PHOTOS 生活照片 ============ -->
@@ -686,7 +701,7 @@
       <div class="chat-head">
         <div class="avatar" id="chatAvatarBox" style="width:36px;height:36px;font-size:16px;">🌙</div>
         <div class="info">
-          <div class="cname" id="chatCName">陆沉</div>
+          <div class="cname" id="chatCName">Charlie</div>
           <div class="cstat" id="chatCStat" onclick="openTodayStatusPanel()" style="cursor:pointer;">在线</div>
         </div>
         <div class="mini-btn" style="width:32px;height:32px;font-size:14px;" onclick="openQuestionnaireComposer()" title="梦向问卷">📋</div>
@@ -820,15 +835,6 @@
       <p style="font-size:11.5px;color:var(--ink-soft);margin-top:8px;">支持上传图片作为整页背景，或输入颜色代码。自定义背景会覆盖默认纸张。</p>
     </div>
     <div class="box">
-      <div class="box-title">纪念日卡片样式</div>
-      <div class="btn-row" style="flex-wrap:wrap;">
-        <div class="btn outline" onclick="editAnnivCardBg()">卡片背景颜色</div>
-        <div class="btn outline" onclick="document.getElementById('annivBgImageInput').click()">📷 卡片背景图</div>
-        <div class="btn outline" onclick="clearAnnivCardBg()">清除卡片背景</div>
-      </div>
-      <input type="file" id="annivBgImageInput" accept="image/*" class="hidden" onchange="onAnnivBgImage(event)">
-    </div>
-    <div class="box">
       <div class="box-title">纸张纹理</div>
       <div class="btn-row">
         <div class="btn outline" onclick="setPaperStyle('grid')">格纹</div>
@@ -866,7 +872,7 @@
         <div class="btn outline" onclick="setSecondaryFont('serif')">衬线体</div>
         <div class="btn outline" onclick="setSecondaryFont('hand')">手写体</div>
       </div>
-      <div id="secondaryFontPreview" style="margin-top:10px;padding:12px;border:1px dashed var(--rule);font-size:16px;font-weight:700;line-height:1.6;">预览：陆沉 · 羽羽 · Status 状态名</div>
+      <div id="secondaryFontPreview" style="margin-top:10px;padding:12px;border:1px dashed var(--rule);font-size:16px;font-weight:700;line-height:1.6;">预览：Charlie · 羽羽 · Status 状态名</div>
       <label class="field" style="margin-top:12px;">名字 / 状态颜色</label>
       <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
         <input type="color" id="nameColorPicker" value="#2A241F" style="width:48px;height:36px;border:1px solid var(--ink);padding:0;" oninput="document.getElementById('nameColorText').value=this.value; previewNameColor(this.value)">
@@ -941,7 +947,7 @@
 
   <div class="bottom-nav">
     <div class="icon-btn" onclick="go('home')">⌂</div>
-    <div class="bn-title" id="bnTitle">EVAN</div>
+    <div class="bn-title" id="bnTitle">Charlie</div>
     <div class="icon-btn" onclick="go('settings')">☰</div>
   </div>
 </div>
@@ -952,7 +958,7 @@
 <script>
 /* ================= IndexedDB ================= */
 
-const DB_NAME = "EVAN_DB";
+const DB_NAME = "Charlie_DB";
 const STORE_NAME = "kv";
 // 聊天记录 / 朋友圈 / 生活照片：这三类数据体积最大、会无限增长（尤其带图片），
 // 单独开专门的表，一条记录一行存，不再是"整个数组打包成一坨"存储。
@@ -1192,14 +1198,14 @@ async function sGet(key, fallback){
   }
 
 try{
-    const raw = await idbGet('EVAN:'+key);
+    const raw = await idbGet('Charlie:'+key);
     if(raw !== undefined && raw !== null){
         return JSON.parse(raw);
     }
 }catch(e){
     // IndexedDB 失败，再尝试 localStorage
     try{
-        const raw = localStorage.getItem('EVAN:'+key);
+        const raw = localStorage.getItem('Charlie:'+key);
         if(raw !== null) return JSON.parse(raw);
     }catch(e){}
 }  return fallback;
@@ -1228,7 +1234,7 @@ async function sSet(key, obj){
     // 云端这次没存上（不代表以后也存不上，下次还会再试），先落到本地兜底
     let idbOk = false;
     try{
-      await idbSet('EVAN:'+key, JSON.stringify(obj));
+      await idbSet('Charlie:'+key, JSON.stringify(obj));
       idbOk = true;
     }catch(e){
       console.warn("IndexedDB 保存失败，改用 localStorage 兜底", e);
@@ -1236,7 +1242,7 @@ async function sSet(key, obj){
     if(!idbOk){
       // 只有 IndexedDB 也失败了，才退到 localStorage（避免每次都重复写一份大数据占用它的几MB配额）
       try{
-        localStorage.setItem('EVAN:'+key, JSON.stringify(obj));
+        localStorage.setItem('Charlie:'+key, JSON.stringify(obj));
         idbOk = true; // localStorage 兜底成功了，也算存上了
       }catch(e){
         console.warn("localStorage 保存也失败了", e);
@@ -1271,8 +1277,8 @@ function uid(){ return Math.random().toString(36).slice(2,10)+Date.now().toStrin
 /* ============================================================
    STATE
    ============================================================ */
-let profile = { name:'陆沉', status:'Status: 跌入你的宇宙 ☆°｡', avatar:'🌙', photo:null, myName:'我', myAvatar:'🙂', myBio:'', momentsCover:null, anniversaryDate:null };
-let chatSettings = { companionName:'陆沉', delayMin:1, delayMax:5, readNoReply:false, background:null, stickers:[
+let profile = { name:'Charlie', status:'Status: 跌入你的宇宙 ☆°｡', avatar:'🌙', photo:null, myName:'我', myAvatar:'🙂', myStatus:'今天也在发光', myBio:'', momentsCover:null, anniversaryDate:null };
+let chatSettings = { companionName:'Charlie', delayMin:1, delayMax:5, readNoReply:false, background:null, stickers:[
   {id:'e1', type:'emoji', value:'🌙'}, {id:'e2', type:'emoji', value:'☕'}, {id:'e3', type:'emoji', value:'📖'}
 ]};
 let chatMessages = [];
@@ -1314,7 +1320,7 @@ let momentInteractSettings = { likeProb: 60, commentProb: 60, replyProb: 60, min
 // 拼字卡：开启后回复会随机把多张字卡拼成一段再发
 let spliceCardsEnabled = false;
 let currentView = 'home';
-let themeSettings = { accent:'#9C2F3B', paperStyle:'grid', bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customBg:'', customBgImage:'', annivBg:'', annivBgImage:'' };
+let themeSettings = { accent:'#9C2F3B', paperStyle:'grid', bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customBg:'', customBgImage:'' };
 let customBubbleCSS = '';
 let pendingReplyTimer = null;
 let lastGroupUsed = null, lastCardUsed = {};
@@ -1365,6 +1371,8 @@ async function init(){
   lifePhotos = await loadInitialPage('lifePhotos');
   statusPool = await sGet('status-pool', []);
   todayStatus = await sGet('today-status', null);
+  whisperPool = [];
+  todayWhisper = null;
   ensureTodayStatus();
   moyuState = await sGet('moyu-state', moyuState);
   if(!Array.isArray(moyuState.activities)) moyuState.activities = [];
@@ -1411,9 +1419,8 @@ async function init(){
     themeSettings = await sGet('theme-settings', themeSettings);
   // 兼容旧备份：补全新增字段
   if(!themeSettings.customBg) themeSettings.customBg = '';
+
   if(!themeSettings.customBgImage) themeSettings.customBgImage = '';
-  if(!themeSettings.annivBg) themeSettings.annivBg = '';
-  if(!themeSettings.annivBgImage) themeSettings.annivBgImage = '';
   if(themeSettings.inkColor === undefined) themeSettings.inkColor = '';
   if(!themeSettings.secondaryFont) themeSettings.secondaryFont = 'serif';
   if(themeSettings.nameColor === undefined) themeSettings.nameColor = '';
@@ -1421,20 +1428,43 @@ async function init(){
 
   applyTheme();
   applyCustomBubbleCSSToPage();
-  // 首屏只渲染当前首页需要的内容；其他页面在切换到时再懒加载，避免移动端启动时一次性重建大量 DOM。
   renderHomeProfile();
+  renderChat();
+  renderCardsView();
+  renderLedger();
+  renderPeriod();
+  renderDiary();
+  renderBeautify();
+  renderMoments();
+  renderLetters();
+  renderInboxLetters();
+  renderCallLog();
+  renderLifePhotos();
   renderTodayStatusHome();
   resumeLetterTimers();
   resumeInboxLetterReplyTimers();
   renderUnreadDots();
   ensureProactiveSchedule();
   checkProactive();
-  setInterval(checkProactive, 20000);
   checkMomentEvents();
-  setInterval(checkMomentEvents, 20000);
-  setInterval(checkMoyuTick, 20000);
+  checkMoyuTick();
   checkQuestionnaireReplies();
-  setInterval(checkQuestionnaireReplies, 20000);
+  // 三个后台轮询合并为一个计时器，减少定时器数量；切到后台时不主动重绘，回到前台立即补检。
+  setInterval(()=>{
+    if(document.hidden) return;
+    checkProactive();
+    checkMomentEvents();
+    checkMoyuTick();
+    checkQuestionnaireReplies();
+  }, 20000);
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden){
+      checkProactive();
+      checkMomentEvents();
+      checkMoyuTick();
+      checkQuestionnaireReplies();
+    }
+  });
   const periodEl = document.getElementById('periodDate');
   if(periodEl) periodEl.valueAsDate = new Date();
 
@@ -1445,7 +1475,7 @@ init();
 /* ============================================================
    NAV
    ============================================================ */
-const VIEW_TITLES = { home:'EVAN', chat:'传讯', cards:'字卡', ledger:'记账', period:'月经', companion:'陪伴记录', settings:'设置', diary:'日记', beautify:'美化', moments:'朋友圈', letters:'写信', inboxLetters:'来信', calls:'通话' };
+const VIEW_TITLES = { home:'Charlie', chat:'传讯', cards:'字卡', ledger:'记账', period:'月经', companion:'陪伴记录', settings:'设置', diary:'日记', beautify:'美化', moments:'朋友圈', letters:'写信', inboxLetters:'来信', calls:'通话' };
 function go(name){
   if(name==='beautify') name = 'settings'; // 美化已并入设置
   document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
@@ -1453,7 +1483,7 @@ function go(name){
   if(!target){ console.warn('view not found:', name); go('home'); return; }
   target.classList.remove('hidden');
   const bn = document.getElementById('bnTitle');
-  if(bn) bn.textContent = VIEW_TITLES[name] || 'EVAN';
+  if(bn) bn.textContent = VIEW_TITLES[name] || 'Charlie';
   currentView = name;
   // 传讯全屏：隐藏底部导航
   const bottomNav = document.querySelector('.bottom-nav');
@@ -1464,18 +1494,6 @@ function go(name){
     renderChat();
     scrollChatBottom();
     if(chatUnread){ chatUnread=false; sSet('chat-unread', false); renderUnreadDots(); }
-  }
-  if(name==='cards'){ renderCardsView(); }
-  if(name==='period'){ renderPeriod(); }
-  if(name==='companion'){ renderCompanionBody(); }
-  if(name==='calls'){ renderCallLog(); }
-  if(name==='lifephotos'){ renderLifePhotos(); }
-  if(name==='chat'){
-    // 之前只清了红点、没重新渲染：主动消息在你不在聊天页时已经 push 进 chatMessages 并存库了，
-    // 但界面还是旧的，得手动刷新页面才会显示。
-    renderChat();
-    scrollChatBottom();
-    if(chatUnread){chatUnread=false; sSet('chat-unread', false); renderUnreadDots(); }
   }
   if(name==='letters'){
     renderLetters();
@@ -1504,10 +1522,16 @@ function renderUnreadDots(){
    HOME / PROFILE
    ============================================================ */
 function renderHomeProfile(){
+  ensureTodayStatus();
   const nameHero = document.getElementById('pNameHero');
   if(nameHero) nameHero.textContent = profile.name;
   const caption = document.getElementById('polaroidCaption');
   if(caption) caption.textContent = profile.status || '「跌入你的宇宙。」';
+  const tn = document.getElementById('crTheirName'); if(tn) tn.textContent = profile.name || 'Charlie';
+  const ts = document.getElementById('crTheirStatus'); if(ts) ts.textContent = todayStatus ? todayStatus.text : '暂无状态';
+  const mn = document.getElementById('crMyName'); if(mn) mn.textContent = profile.myName || '我';
+  const ms = document.getElementById('crMyStatus'); if(ms) ms.textContent = profile.myStatus || '今天也在发光';
+  if(typeof renderMoyuHome === 'function') renderMoyuHome();
   const ph = document.getElementById('polaroidPh');
   if(ph) ph.innerHTML = profile.photo ? `<img loading="lazy" decoding="async" src="${profile.photo}">` : '点击上传';
   document.getElementById('chatCName').textContent = chatSettings.companionName;
@@ -1617,6 +1641,22 @@ function renderMomentsHeader(){
   const bio = document.getElementById('momentsBioLabel');
   if(bio) bio.textContent = profile.myBio || '点这里写一句签名';
 }
+function editMyStatus(){
+  openOverlay(`
+    <div class="drawer-head"><h3>修改状态</h3><span class="close-x" onclick="closeOverlay()">✕</span></div>
+    <label class="field">状态</label>
+    <textarea id="editMyStatusInput" style="min-height:72px;">${(profile.myStatus||'').replace(/</g,'&lt;')}</textarea>
+    <div class="btn-row"><div class="btn" onclick="confirmMyStatus()">保存</div></div>
+  `);
+  setTimeout(()=>{ const el=document.getElementById('editMyStatusInput'); if(el) el.focus(); }, 50);
+}
+async function confirmMyStatus(){
+  const el = document.getElementById('editMyStatusInput');
+  profile.myStatus = (el && el.value || '').trim();
+  await sSet('profile', profile);
+  renderHomeProfile();
+  closeOverlay();
+}
 async function editMomentsBio(){
   openOverlay(`
     <div class="drawer-head"><h3>写一句签名</h3><span class="close-x" onclick="closeOverlay()">✕</span></div>
@@ -1631,6 +1671,7 @@ async function confirmEditBio(){
   profile.myBio = (el && el.value || '').trim();
   await sSet('profile', profile);
   renderMomentsHeader();
+  renderHomeProfile();
   closeOverlay();
 }
 function searchMoments(){
@@ -1788,6 +1829,7 @@ async function importStatusBulk(){
   if(listEl) listEl.innerHTML = renderStatusChips();
   ensureTodayStatus();
   renderTodayStatusHome();
+  renderHomeProfile();
 }
 function onStatusFile(e){
   const f = e.target.files[0]; if(!f) return;
@@ -1806,6 +1848,7 @@ function onStatusFile(e){
     if(listEl) listEl.innerHTML = renderStatusChips();
     ensureTodayStatus();
     renderTodayStatusHome();
+    renderHomeProfile();
   };
   reader.readAsText(f, 'utf-8');
 }
@@ -1814,12 +1857,20 @@ async function deleteStatus(i){
   await sSet('status-pool', statusPool);
   const listEl = document.getElementById('statusPoolList');
   if(listEl) listEl.innerHTML = renderStatusChips();
+  if(todayStatus && !statusPool.includes(todayStatus.text)){
+    todayStatus = null;
+    ensureTodayStatus();
+    await sSet('today-status', todayStatus);
+    renderTodayStatusHome();
+    renderHomeProfile();
+  }
 }
 async function rerollTodayStatus(){
   if(statusPool.length===0) return;
   todayStatus = { date: todayKey(), text: statusPool[Math.floor(Math.random()*statusPool.length)] };
   await sSet('today-status', todayStatus);
   renderTodayStatusHome();
+  renderHomeProfile();
   openTodayStatusPanel();
 }
 
@@ -2396,9 +2447,9 @@ function onChatImageFile(e){
   e.target.value = '';
 }
 
-/* 已读不回开启后，每条消息都用抛硬币的方式随机决定这次回不回：30% 概率不回 */
+/* 已读不回开启后，每条消息都用抛硬币的方式随机决定这次回不回，不是设定好的固定比例 */
 function handleIncomingForBot(userText){
-  if(chatSettings.readNoReply && Math.random() < 0.3){
+  if(chatSettings.readNoReply && Math.random() < 0.5){
     setTimeout(async ()=>{
       const last = chatMessages[chatMessages.length-1];
       if(last && last.from==='user'){ last.read = true; await recPut('chatMessages', last); renderChat(); }
@@ -2841,7 +2892,7 @@ function openChatSettings(){
     <input type="range" min="1" max="10" step="1" value="${chatSettings.delayMax}" oninput="document.getElementById('csDelayMaxVal').textContent=this.value" id="csDelayMax" style="width:100%;">
     <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">每次回复会在这个区间里随机挑一个时间，不是固定的</div>
     <div class="switch-row">
-      <span>已读不回<div style="font-size:10.5px;color:var(--ink-soft);font-weight:400;">开启后每条消息有 30% 几率已读不回，不是每次都不回</div></span>
+      <span>已读不回<div style="font-size:10.5px;color:var(--ink-soft);font-weight:400;">开启后每条消息都是对半几率，不是每次都不回</div></span>
       <div class="switch ${chatSettings.readNoReply?'on':''}" id="csReadNoReply" onclick="this.classList.toggle('on')"><div class="dot"></div></div>
     </div>
     <div class="box-title" style="margin-top:14px;">节奏</div>
@@ -3162,6 +3213,7 @@ async function sendQuestionnaire(){
   await recPut('chatMessages', msg);
   renderChat();
   closeOverlay();
+  // 不走普通自动回复，等定时检查来处理问卷选择
 }
 async function checkQuestionnaireReplies(){
   const now = Date.now();
@@ -3169,6 +3221,7 @@ async function checkQuestionnaireReplies(){
   for(const m of chatMessages){
     if(m.type !== 'questionnaire' || m.answered || !m.scheduledReplyAt) continue;
     if(m.scheduledReplyAt > now) continue;
+    // 到期：随机选一个选项
     const opts = m.options || [];
     if(!opts.length) continue;
     const chosen = opts[Math.floor(Math.random() * opts.length)];
@@ -3177,6 +3230,7 @@ async function checkQuestionnaireReplies(){
     m.answerTime = Date.now();
     m.read = true;
     await recPut('chatMessages', m);
+    // 发一条 bot 回复消息
     const replyText = `我选了「${chosen}」`;
     const replyMsg = {
       id: uid(),
@@ -3348,9 +3402,6 @@ function renderPeriod(){
   predictBox.innerHTML = `平均周期约 <b>${avgCycle}</b> 天，预测下次开始日期：<b style="color:var(--rouge)">${next.toISOString().slice(0,10)}</b>`;
 }
 
-/* ============================================================
-   RECIPE
-   ============================================================ */
 /* ---------- 宠物：奇遇 / 照看 可折叠 ---------- */
 
 /* ============================================================
@@ -3839,16 +3890,16 @@ async function saveProfile(){
   const av = document.getElementById('setAvatar').value.trim();
   if(av) profile.avatar = av;
   await sSet('profile', profile);
-  if(!chatSettings.companionName || chatSettings.companionName==='陆沉'){ /* keep independent */ }
+  if(!chatSettings.companionName || chatSettings.companionName==='Charlie'){ /* keep independent */ }
   renderHomeProfile();
   alert('已保存');
 }
 async function resetAll(){
   if(!confirm('确定要清空全部数据吗？这个操作无法撤销。')) return;
-  const keys = ['profile','chat-settings','chat-messages','cards-data','ledger-entries','period-entries','diary-entries','theme-settings','moments-posts','letters','inbox-letters','call-logs','proactive-state','chat-unread','letter-unread','inbox-letter-unread','moments-unread','life-photos','status-pool','today-status','custom-bubble-css','rec-store-migrated-v2','moyu-state','proactive-msg-settings','moment-interact-settings','splice-cards-enabled'];
+  const keys = ['profile','chat-settings','chat-messages','cards-data','ledger-entries','period-entries','diary-entries','theme-settings','moments-posts','letters','inbox-letters','call-logs','proactive-state','chat-unread','letter-unread','inbox-letter-unread','moments-unread','life-photos','status-pool','today-status','whisper-pool','today-whisper','custom-bubble-css','rec-store-migrated-v2','moyu-state','proactive-msg-settings','moment-interact-settings','splice-cards-enabled'];
   for(const k of keys){
     try{ if(hasCloudStorage()) await window.storage.delete(k, false); }catch(e){}
-    try{ localStorage.removeItem('EVAN:'+k); }catch(e){}
+    try{ localStorage.removeItem('Charlie:'+k); }catch(e){}
   }
   for(const store of REC_STORES){
     try{ await recClear(store); }catch(e){}
@@ -3872,7 +3923,7 @@ async function exportBackup(){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'EVAN-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'Charlie-backup-' + new Date().toISOString().slice(0,10) + '.json';
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -4051,7 +4102,7 @@ async function resetNameColor(){
   renderBeautify();
 }
 async function resetAppearance(){
-  themeSettings = { accent:'#9C2F3B', paperStyle:'grid', bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customBg:'', customBgImage:'', annivBg:'', annivBgImage:'' };
+  themeSettings = { accent:'#9C2F3B', paperStyle:'grid', bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customBg:'', customBgImage:'' };
   customBubbleCSS = '';
   await sSet('theme-settings', themeSettings);
   await sSet('custom-bubble-css', customBubbleCSS);
@@ -4097,19 +4148,6 @@ function applyTheme(){
     document.body.style.removeProperty('--page-bg-image');
     document.body.style.backgroundImage = '';
     document.body.style.backgroundColor = '';
-  }
-  const ac = document.querySelector('.anniv-card');
-  if(ac){
-    // 先清掉旧的内联样式，再按优先级重设
-    ac.removeAttribute('style');
-    if(themeSettings.annivBgImage){
-      ac.style.backgroundImage = 'url(' + themeSettings.annivBgImage + ')';
-      ac.style.backgroundSize = 'cover';
-      ac.style.backgroundPosition = 'center';
-      ac.style.backgroundColor = 'transparent';
-    } else if(themeSettings.annivBg){
-      ac.style.background = themeSettings.annivBg;
-    }
   }
   applyChatBackground();
 }
@@ -4619,33 +4657,6 @@ async function delCompanionAnniv(i){
 
 
 
-async function editAnnivCardBg(){
-  const cur = themeSettings.annivBg || '#F5E6D3';
-  openOverlay(`
-    <div class="drawer-head"><h3>纪念日卡片背景</h3><span class="close-x" onclick="closeOverlay()">✕</span></div>
-    <label class="field">颜色</label>
-    <div style="display:flex;gap:10px;align-items:center;">
-      <input type="color" id="annivBgColorPicker" value="${cur.startsWith('#')&&cur.length<=7?cur:'#F5E6D3'}" style="width:48px;height:36px;border:1px solid var(--ink);padding:0;">
-      <input type="text" id="annivBgColorText" value="${cur}" placeholder="#F5E6D3 或 linear-gradient(...)" style="flex:1;">
-    </div>
-    <div class="btn-row" style="margin-top:14px;">
-      <div class="btn" onclick="confirmAnnivBgColor()">应用</div>
-      <div class="btn outline" onclick="document.getElementById('annivBgColorText').value='';confirmAnnivBgColor();">清除颜色</div>
-    </div>
-  `);
-  const picker = document.getElementById('annivBgColorPicker');
-  const text = document.getElementById('annivBgColorText');
-  if(picker && text){
-    picker.oninput = ()=>{ text.value = picker.value; };
-  }
-}
-async function confirmAnnivBgColor(){
-  const text = document.getElementById('annivBgColorText');
-  themeSettings.annivBg = (text && text.value || '').trim();
-  await sSet('theme-settings', themeSettings);
-  applyTheme();
-  closeOverlay();
-}
 async function editCustomBg(){
   const cur = themeSettings.customBg || '#F3EEE3';
   openOverlay(`
@@ -4692,26 +4703,6 @@ async function clearCustomBg(){
   await sSet('theme-settings', themeSettings);
   applyTheme();
 }
-async function onAnnivBgImage(e){
-  const f = e.target.files && e.target.files[0];
-  if(!f) return;
-  const reader = new FileReader();
-  reader.onload = async ()=>{
-    themeSettings.annivBgImage = await compressImage(reader.result, 1400); // 同样压缩，避免原图直接存进 IndexedDB
-    await sSet('theme-settings', themeSettings);
-    applyTheme();
-    alert('纪念日卡片背景图已应用');
-  };
-  reader.readAsDataURL(f);
-  e.target.value = '';
-}
-async function clearAnnivCardBg(){
-  themeSettings.annivBg = '';
-  themeSettings.annivBgImage = '';
-  await sSet('theme-settings', themeSettings);
-  applyTheme();
-}
-
 
 
 /* ============================================================
@@ -4783,6 +4774,26 @@ async function doSearch(){
     console.error(err);
     box.innerHTML = '<div class="empty-note">搜索失败</div>';
   }
+}
+
+</script>
+
+<script>
+(function(){
+  function updateCharlieClock(){
+    const now=new Date();
+    const pad=n=>String(n).padStart(2,'0');
+    const days=['日','一','二','三','四','五','六'];
+    const c=document.getElementById('crClock'), d=document.getElementById('crDate');
+    if(c)c.textContent=pad(now.getHours())+':'+pad(now.getMinutes());
+    if(d)d.innerHTML=(now.getMonth()+1)+'月'+now.getDate()+'日 星期'+days[now.getDay()]+' <span class="cr-spark">✦</span>';
+  }
+  updateCharlieClock(); setInterval(updateCharlieClock,60000);
+})();
+
+
+function escHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 </script>
