@@ -1327,6 +1327,8 @@ let moyuState = {
 };
 // 主动消息：开关 + 固定间隔（分钟，实际会在附近随机浮动一点）
 let proactiveMsgSettings = { enabled: true, minMinutes: 1, maxMinutes: 60 }; // 默认 1 分钟 ~ 1 小时，滑条上限 5 小时
+// 朋友圈互动概率（0~100）与主动发朋友圈天数区间，均可在传讯设置里调节
+let momentInteractSettings = { likeProb: 60, commentProb: 60, replyProb: 60, minDays: 1, maxDays: 15 };
 // 拼字卡：开启后回复会随机把多张字卡拼成一段再发
 let spliceCardsEnabled = false;
 let currentView = 'home';
@@ -1412,6 +1414,17 @@ async function init(){
   proactiveMsgSettings.minMinutes = Math.max(1, Math.min(300, proactiveMsgSettings.minMinutes));
   proactiveMsgSettings.maxMinutes = Math.max(proactiveMsgSettings.minMinutes, Math.min(300, proactiveMsgSettings.maxMinutes));
   if(typeof proactiveMsgSettings.enabled !== 'boolean') proactiveMsgSettings.enabled = true;
+  momentInteractSettings = await sGet('moment-interact-settings', momentInteractSettings);
+  if(typeof momentInteractSettings.likeProb !== 'number') momentInteractSettings.likeProb = 60;
+  if(typeof momentInteractSettings.commentProb !== 'number') momentInteractSettings.commentProb = 60;
+  if(typeof momentInteractSettings.replyProb !== 'number') momentInteractSettings.replyProb = 60;
+  if(typeof momentInteractSettings.minDays !== 'number') momentInteractSettings.minDays = 1;
+  if(typeof momentInteractSettings.maxDays !== 'number') momentInteractSettings.maxDays = 15;
+  momentInteractSettings.likeProb = Math.max(0, Math.min(100, momentInteractSettings.likeProb));
+  momentInteractSettings.commentProb = Math.max(0, Math.min(100, momentInteractSettings.commentProb));
+  momentInteractSettings.replyProb = Math.max(0, Math.min(100, momentInteractSettings.replyProb));
+  momentInteractSettings.minDays = Math.max(1, Math.min(30, momentInteractSettings.minDays));
+  momentInteractSettings.maxDays = Math.max(momentInteractSettings.minDays, Math.min(30, momentInteractSettings.maxDays));
   spliceCardsEnabled = await sGet('splice-cards-enabled', false);
   resumeMoyuSchedule();
   renderMoyuHome();
@@ -2380,9 +2393,9 @@ function onChatImageFile(e){
   e.target.value = '';
 }
 
-/* 已读不回开启后，每条消息都用抛硬币的方式随机决定这次回不回，不是设定好的固定比例 */
+/* 已读不回开启后，每条消息都用抛硬币的方式随机决定这次回不回：30% 概率不回 */
 function handleIncomingForBot(userText){
-  if(chatSettings.readNoReply && Math.random() < 0.5){
+  if(chatSettings.readNoReply && Math.random() < 0.3){
     setTimeout(async ()=>{
       const last = chatMessages[chatMessages.length-1];
       if(last && last.from==='user'){ last.read = true; await recPut('chatMessages', last); renderChat(); }
@@ -2505,7 +2518,7 @@ function scheduleNextProactiveMsg(){
     proactiveState.nextMsgAt = null;
     return;
   }
-  // 纯随机：在最短～最长之间任意挑一个时间，没有“中心值小幅浮动”
+  // 纯随机：在最短～最长滑块区间内任意挑一个时间触发；触发后立即再排下一次，可在区间内多次触发
   const lo = Math.max(1, Math.min(300, Math.min(proactiveMsgSettings.minMinutes||1, proactiveMsgSettings.maxMinutes||60)));
   const hi = Math.max(lo, Math.min(300, Math.max(proactiveMsgSettings.minMinutes||1, proactiveMsgSettings.maxMinutes||60)));
   proactiveState.nextMsgAt = Date.now() + randomBetween(lo*60*1000, hi*60*1000);
@@ -2551,7 +2564,7 @@ async function checkProactive(){
   }
   if(proactiveState.nextMomentAt && Date.now() >= proactiveState.nextMomentAt){
     await sendProactiveMoment();
-    scheduleNextProactiveMoment(); // 发完这一条，重新在下一个 2～15 天窗口里纯随机挑一个时间点，不预先定好次数
+    scheduleNextProactiveMoment(); // 发完这一条，重新在下一个 1～15 天窗口里纯随机挑一个时间点，不预先定好次数
     changed = true;
   }
   if(changed) await sSet('proactive-state', proactiveState);
@@ -2825,7 +2838,7 @@ function openChatSettings(){
     <input type="range" min="1" max="10" step="1" value="${chatSettings.delayMax}" oninput="document.getElementById('csDelayMaxVal').textContent=this.value" id="csDelayMax" style="width:100%;">
     <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">每次回复会在这个区间里随机挑一个时间，不是固定的</div>
     <div class="switch-row">
-      <span>已读不回<div style="font-size:10.5px;color:var(--ink-soft);font-weight:400;">开启后每条消息都是对半几率，不是每次都不回</div></span>
+      <span>已读不回<div style="font-size:10.5px;color:var(--ink-soft);font-weight:400;">开启后每条消息有 30% 几率已读不回，不是每次都不回</div></span>
       <div class="switch ${chatSettings.readNoReply?'on':''}" id="csReadNoReply" onclick="this.classList.toggle('on')"><div class="dot"></div></div>
     </div>
     <div class="box-title" style="margin-top:14px;">节奏</div>
@@ -2838,6 +2851,19 @@ function openChatSettings(){
     <label class="field">最长：<span id="csProMaxVal">${proactiveMsgSettings.maxMinutes||60}</span> 分钟</label>
     <input type="range" min="1" max="300" step="1" value="${Math.min(300, proactiveMsgSettings.maxMinutes||60)}" oninput="document.getElementById('csProMaxVal').textContent=this.value" id="csProMax" style="width:100%;">
     <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">在最短～最长之间纯随机挑时间发（范围 1 分钟～5 小时），可自己调节</div>
+    <div class="box-title" style="margin-top:14px;">朋友圈互动</div>
+    <div style="font-size:11px;color:var(--ink-soft);margin-bottom:6px;">你发朋友圈后，TA 点赞 / 评论的概率；以及你评论后 TA 回复的概率。0% 从不，100% 必做。</div>
+    <label class="field">点赞概率：<span id="csLikeProbVal">${momentInteractSettings.likeProb||60}</span>%</label>
+    <input type="range" min="0" max="100" step="1" value="${Math.min(100, momentInteractSettings.likeProb||60)}" oninput="document.getElementById('csLikeProbVal').textContent=this.value" id="csLikeProb" style="width:100%;">
+    <label class="field">评论概率：<span id="csCommentProbVal">${momentInteractSettings.commentProb||60}</span>%</label>
+    <input type="range" min="0" max="100" step="1" value="${Math.min(100, momentInteractSettings.commentProb||60)}" oninput="document.getElementById('csCommentProbVal').textContent=this.value" id="csCommentProb" style="width:100%;">
+    <label class="field">回评论概率：<span id="csReplyProbVal">${momentInteractSettings.replyProb||60}</span>%</label>
+    <input type="range" min="0" max="100" step="1" value="${Math.min(100, momentInteractSettings.replyProb||60)}" oninput="document.getElementById('csReplyProbVal').textContent=this.value" id="csReplyProb" style="width:100%;">
+    <label class="field">主动发朋友圈最短：<span id="csMomMinDaysVal">${momentInteractSettings.minDays||1}</span> 天</label>
+    <input type="range" min="1" max="30" step="1" value="${Math.min(30, momentInteractSettings.minDays||1)}" oninput="document.getElementById('csMomMinDaysVal').textContent=this.value" id="csMomMinDays" style="width:100%;">
+    <label class="field">主动发朋友圈最长：<span id="csMomMaxDaysVal">${momentInteractSettings.maxDays||15}</span> 天</label>
+    <input type="range" min="1" max="30" step="1" value="${Math.min(30, momentInteractSettings.maxDays||15)}" oninput="document.getElementById('csMomMaxDaysVal').textContent=this.value" id="csMomMaxDays" style="width:100%;">
+    <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">在最短～最长天数之间纯随机挑时间发朋友圈，发完再排下一次，可多次触发</div>
     <div class="box-title" style="margin-top:14px;">拼字卡</div>
     <div class="switch-row">
       <span>拼字卡<div style="font-size:10.5px;color:var(--ink-soft);font-weight:400;">开启后有机会随机把 2~5 张字卡拼在一起发，不是每条都拼</div></span>
@@ -2928,6 +2954,17 @@ async function saveChatSettings(){
   proactiveMsgSettings.maxMinutes = Math.max(pMin, pMax);
   await sSet('proactive-msg-settings', proactiveMsgSettings);
   scheduleNextProactiveMsg();
+  await sSet('proactive-state', proactiveState);
+  momentInteractSettings.likeProb = Math.max(0, Math.min(100, parseInt(document.getElementById('csLikeProb').value,10) || 0));
+  momentInteractSettings.commentProb = Math.max(0, Math.min(100, parseInt(document.getElementById('csCommentProb').value,10) || 0));
+  momentInteractSettings.replyProb = Math.max(0, Math.min(100, parseInt(document.getElementById('csReplyProb').value,10) || 0));
+  const mdMin = Math.max(1, Math.min(30, parseInt(document.getElementById('csMomMinDays').value,10) || 1));
+  const mdMax = Math.max(1, Math.min(30, parseInt(document.getElementById('csMomMaxDays').value,10) || 15));
+  momentInteractSettings.minDays = Math.min(mdMin, mdMax);
+  momentInteractSettings.maxDays = Math.max(mdMin, mdMax);
+  await sSet('moment-interact-settings', momentInteractSettings);
+  // 区间变了就按新区间重排下一次主动发朋友圈
+  scheduleNextProactiveMoment();
   await sSet('proactive-state', proactiveState);
   spliceCardsEnabled = document.getElementById('csSpliceCards').classList.contains('on');
   await sSet('splice-cards-enabled', spliceCardsEnabled);
@@ -3566,19 +3603,19 @@ async function postMoment(){
   momentDraftMedia = null;
   closeOverlay();
   renderMoments();
-  // 先 50/50 决定会不会点赞、会不会评论；只有「会」才登记时间，到期必执行（不再二次抛硬币）
-  if(Math.random() < 0.5){
+  // 按传讯设置里的概率决定会不会点赞、会不会评论；只有「会」才登记时间，到期必执行
+  if(Math.random() < ((momentInteractSettings.likeProb||60)/100)){
     await addMomentEvent('like', post.id, 'like');
   }
-  if(Math.random() < 0.5){
+  if(Math.random() < ((momentInteractSettings.commentProb||60)/100)){
     await addMomentEvent('comment', post.id, 'comment');
   }
 }
 /* ---- 朋友圈"待触发事件"：先决定要不要互动，再随机「什么时候」；
    存时间戳靠轮询检查（跟写信/主动消息同一套思路），不用超长 setTimeout ---- */
 async function addMomentEvent(type, postId, action){
-  // like / comment：1~48小时，模拟"过一阵子才刷到"（调用方已先 50/50 决定要不要）
-  // commentReply：1分钟~12小时；调用方已先 50/50 决定要不要回
+  // like / comment：1~48小时，模拟"过一阵子才刷到"（调用方已先按设置概率决定要不要）
+  // commentReply：1分钟~12小时；调用方已先按设置概率决定要不要回
   const range = type==='commentReply'
     ? [1*60*1000, 12*3600*1000]
     : [1*3600*1000, 48*3600*1000];
@@ -3600,7 +3637,7 @@ async function checkMomentEvents(){
     const post = momentsPosts.find(p=>p.id===e.postId);
     if(!post) continue; // 帖子不在当前已加载分页里，跳过（多为很久以前的旧帖）
     if(e.type==='reaction' || e.type==='like' || e.type==='comment'){
-      // 进队时已决定要互动，到期必执行（不再二次 50/50）
+      // 进队时已决定要互动，到期必执行（不再二次抛硬币）
       const doLike = e.action==='like' || e.type==='like' || (e.type==='reaction' && !e.action);
       const doComment = e.action==='comment' || e.type==='comment';
       if(doLike) post.liked = true;
@@ -3626,9 +3663,11 @@ async function checkMomentEvents(){
 
 /* ---- TA 也会自己挑内容、随机什么时候发朋友圈 ---- */
 function scheduleNextProactiveMoment(){
-  // 纯随机：从现在起 2～15 天之间任意挑一个时间点，哪一天触发不预先定好
+  // 纯随机：从现在起 1～15 天之间任意挑一个时间点，哪一天触发不预先定好
   // （跟写信 scheduleNextProactiveLetter / 打电话 scheduleNextProactiveCall 同一套思路）
-  proactiveState.nextMomentAt = Date.now() + randomBetween(2*24*3600*1000, 15*24*3600*1000);
+  const mdLo = Math.max(1, Math.min(30, Math.min(momentInteractSettings.minDays||1, momentInteractSettings.maxDays||15)));
+  const mdHi = Math.max(mdLo, Math.min(30, Math.max(momentInteractSettings.minDays||1, momentInteractSettings.maxDays||15)));
+  proactiveState.nextMomentAt = Date.now() + randomBetween(mdLo*24*3600*1000, mdHi*24*3600*1000);
 }
 async function sendProactiveMoment(){
   const lineCount = 1 + Math.floor(Math.random()*2);
@@ -3664,7 +3703,7 @@ async function addMomentComment(id){
   input.value = '';
   await recPut('momentsPosts', post);
   renderMoments();
-  if(Math.random() < 0.5){
+  if(Math.random() < ((momentInteractSettings.replyProb||60)/100)){
     await addMomentEvent('commentReply', post.id);
   }
 }
@@ -4002,7 +4041,7 @@ async function saveProfile(){
 }
 async function resetAll(){
   if(!confirm('确定要清空全部数据吗？这个操作无法撤销。')) return;
-  const keys = ['profile','chat-settings','chat-messages','cards-data','ledger-entries','period-entries','diary-entries','recipe-entries','theme-settings','moments-posts','letters','inbox-letters','call-logs','proactive-state','chat-unread','letter-unread','inbox-letter-unread','moments-unread','life-photos','status-pool','today-status','custom-bubble-css','rec-store-migrated-v2','moyu-state','proactive-msg-settings','splice-cards-enabled','tarot-history'];
+  const keys = ['profile','chat-settings','chat-messages','cards-data','ledger-entries','period-entries','diary-entries','recipe-entries','theme-settings','moments-posts','letters','inbox-letters','call-logs','proactive-state','chat-unread','letter-unread','inbox-letter-unread','moments-unread','life-photos','status-pool','today-status','custom-bubble-css','rec-store-migrated-v2','moyu-state','proactive-msg-settings','moment-interact-settings','splice-cards-enabled','tarot-history'];
   for(const k of keys){
     try{ if(hasCloudStorage()) await window.storage.delete(k, false); }catch(e){}
     try{ localStorage.removeItem('EVAN:'+k); }catch(e){}
@@ -4022,7 +4061,7 @@ async function exportBackup(){
   const data = {
     profile, chatSettings, chatMessages: fullChat, cardsData, ledgerEntries, periodEntries,
     diaryEntries, recipeEntries, tarotHistory, momentsPosts: fullMoments, letters, inboxLetters, callLogs, themeSettings, proactiveState,
-    lifePhotos: fullPhotos, statusPool, todayStatus, customBubbleCSS, moyuState, proactiveMsgSettings, spliceCardsEnabled,
+    lifePhotos: fullPhotos, statusPool, todayStatus, customBubbleCSS, moyuState, proactiveMsgSettings, momentInteractSettings, spliceCardsEnabled,
     exportedAt: Date.now()
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
@@ -4064,6 +4103,7 @@ function onImportBackupFile(e){
     customBubbleCSS = data.customBubbleCSS || '';
     moyuState = data.moyuState || moyuState;
     proactiveMsgSettings = data.proactiveMsgSettings || proactiveMsgSettings;
+    momentInteractSettings = data.momentInteractSettings || momentInteractSettings;
     if(typeof data.spliceCardsEnabled === 'boolean') spliceCardsEnabled = data.spliceCardsEnabled;
     await sSet('profile', profile);
     await sSet('chat-settings', chatSettings);
@@ -4083,6 +4123,7 @@ function onImportBackupFile(e){
     await sSet('custom-bubble-css', customBubbleCSS);
             await sSet('moyu-state', moyuState);
     await sSet('proactive-msg-settings', proactiveMsgSettings);
+    await sSet('moment-interact-settings', momentInteractSettings);
     await sSet('splice-cards-enabled', spliceCardsEnabled);
     // 恢复到各自专用的逐条记录表：先清空旧的，再把备份里的全部记录整体写进去
     await recClear('chatMessages'); await recPutMany('chatMessages', importedChat.map((m,i)=> m.time?m:{...m,time:Date.now()-(importedChat.length-i)}));
