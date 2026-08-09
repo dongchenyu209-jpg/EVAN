@@ -620,7 +620,6 @@
       <div class="fn-item" onclick="go('inboxLetters')"><div class="fn-icon">📬<span id="inboxLetterDot" class="dot-badge hidden"></span></div><div class="fn-label">来信</div></div>
       <div class="fn-item" onclick="go('ledger')"><div class="fn-icon">⏳</div><div class="fn-label">记账</div></div>
       <div class="fn-item" onclick="go('companion')"><div class="fn-icon">📋</div><div class="fn-label">陪伴记录</div></div>
-      <div class="fn-item" onclick="go('recipe')"><div class="fn-icon">🃏</div><div class="fn-label">占卜</div></div>
       <div class="fn-item" onclick="go('settings')"><div class="fn-icon">⚙️</div><div class="fn-label">设置</div></div>
     </div>
   </section>
@@ -874,36 +873,6 @@
         <div class="btn outline" onclick="clearCustomBubbleCSS()">恢复默认气泡</div>
       </div>
     </div>
-  </section>
-
-  <!-- ============ RECIPE 食谱 ============ -->
-  <section id="view-recipe" class="view hidden">
-    <div class="view-head"><div class="icon-btn" onclick="go('home')">←</div><h2>占卜抽牌</h2></div>
-    <div class="box">
-      <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px;">正式模拟抽牌：先选牌组，再洗牌后从上抽三张（不放回）。正逆位纯随机。</p>
-      <label class="field">牌组</label>
-      <select id="divDeckType" onchange="onDivDeckChange()">
-        <option value="tarot78">塔罗 78 张（大阿卡纳 + 小阿卡纳）</option>
-        <option value="lenormand36">雷诺曼 36 张</option>
-      </select>
-      <label class="field">你的问题（可选）</label>
-      <textarea id="tarotQuestion" placeholder="例如：我最近的感情走向如何？ / 今天适合做什么？" style="min-height:64px;"></textarea>
-      <div class="btn-row">
-        <div class="btn outline" onclick="shuffleDivDeck()">🔀 重新洗牌</div>
-        <div class="btn rouge" onclick="drawTarotThree()">🃏 抽三张牌</div>
-      </div>
-      <div id="divDeckStatus" style="font-size:11.5px;color:var(--ink-soft);margin-top:8px;"></div>
-    </div>
-    <div id="tarotResult"></div>
-    <div class="btn-row" style="margin-top:12px;">
-      <div class="btn outline" onclick="go('divHistory')">🕮 占卜历史</div>
-    </div>
-  </section>
-
-  <!-- ============ DIV HISTORY 占卜历史 ============ -->
-  <section id="view-divHistory" class="view hidden">
-    <div class="view-head"><div class="icon-btn" onclick="go('recipe')">←</div><h2>占卜历史</h2></div>
-    <div id="divHistoryList"></div>
   </section>
 
   <!-- ============ DIARY 日记 ============ -->
@@ -1297,7 +1266,6 @@ let cardsData = { groups:{} };
 let ledgerEntries = [];
 let periodEntries = [];
 let diaryEntries = [];
-let recipeEntries = [];
 let momentsPosts = [];
 let momentEvents = []; // 朋友圈"待触发事件"队列（点赞/评论、回评论），持久化存储，靠轮询检查而非setTimeout，防止长延迟跨设备/跨刷新失效
 let momentDraftMedia = null;
@@ -1362,8 +1330,6 @@ async function init(){
   periodEntries = await sGet('period-entries', []);
   await loadCompanionData();
   diaryEntries = await sGet('diary-entries', []);
-  recipeEntries = await sGet('recipe-entries', []);
-  tarotHistory = await sGet('tarot-history', []);
   momentsPosts = await loadInitialPage('momentsPosts');
   momentEvents = await sGet('moment-events', []);
   letters = await sGet('letters', []);
@@ -1441,19 +1407,8 @@ async function init(){
 
   applyTheme();
   applyCustomBubbleCSSToPage();
+  // 首屏只渲染当前首页需要的内容；其他页面在切换到时再懒加载，避免移动端启动时一次性重建大量 DOM。
   renderHomeProfile();
-  renderChat();
-  renderCardsView();
-  renderLedger();
-  renderPeriod();
-  renderRecipes();
-  renderDiary();
-  renderBeautify();
-  renderMoments();
-  renderLetters();
-  renderInboxLetters();
-  renderCallLog();
-  renderLifePhotos();
   renderTodayStatusHome();
   resumeLetterTimers();
   resumeInboxLetterReplyTimers();
@@ -1474,7 +1429,7 @@ init();
 /* ============================================================
    NAV
    ============================================================ */
-const VIEW_TITLES = { home:'EVAN', chat:'传讯', cards:'字卡', ledger:'记账', period:'月经', companion:'陪伴记录', settings:'设置', recipe:'塔罗', divHistory:'占卜历史', diary:'日记', beautify:'美化', moments:'朋友圈', letters:'写信', inboxLetters:'来信', calls:'通话' };
+const VIEW_TITLES = { home:'EVAN', chat:'传讯', cards:'字卡', ledger:'记账', period:'月经', companion:'陪伴记录', settings:'设置', diary:'日记', beautify:'美化', moments:'朋友圈', letters:'写信', inboxLetters:'来信', calls:'通话' };
 function go(name){
   if(name==='beautify') name = 'settings'; // 美化已并入设置
   document.querySelectorAll('.view').forEach(v=>v.classList.add('hidden'));
@@ -1494,6 +1449,18 @@ function go(name){
     scrollChatBottom();
     if(chatUnread){ chatUnread=false; sSet('chat-unread', false); renderUnreadDots(); }
   }
+  if(name==='cards'){ renderCardsView(); }
+  if(name==='period'){ renderPeriod(); }
+  if(name==='companion'){ renderCompanionBody(); }
+  if(name==='calls'){ renderCallLog(); }
+  if(name==='lifephotos'){ renderLifePhotos(); }
+  if(name==='chat'){
+    // 之前只清了红点、没重新渲染：主动消息在你不在聊天页时已经 push 进 chatMessages 并存库了，
+    // 但界面还是旧的，得手动刷新页面才会显示。
+    renderChat();
+    scrollChatBottom();
+    if(chatUnread){chatUnread=false; sSet('chat-unread', false); renderUnreadDots(); }
+  }
   if(name==='letters'){
     renderLetters();
     if(letterUnread){ letterUnread=false; sSet('letter-unread', false); renderUnreadDots(); }
@@ -1508,8 +1475,6 @@ function go(name){
   }
   if(name==='ledger'){ renderLedger(); }
   if(name==='diary'){ renderDiary(); }
-  if(name==='recipe'){ renderRecipes(); }
-  if(name==='divHistory'){ renderDivHistoryList(); }
   if(name==='settings'){ renderBeautify(); if(typeof fillSettingsForm==='function') fillSettingsForm(); }
 }
 function renderUnreadDots(){
@@ -3246,307 +3211,6 @@ function renderPeriod(){
 /* ============================================================
    RECIPE
    ============================================================ */
-/* ============================================================
-   占卜：塔罗 78 / 雷诺曼 36 —— 洗牌后纯随机抽三张（不放回）
-   ============================================================ */
-function buildTarot78(){
-  const major = [
-    ['愚者','🃏','新的开始，怀抱信任与好奇心迈出未知的一步；心态轻盈，愿意冒险尝试。','行动前的犹豫、鲁莽冒进或害怕承担后果而裹足不前；也提醒你没找到自由与责任的平衡。'],
-    ['魔术师','🪄','手上已具备需要的资源与能力，重点在于集中意志、主动出击，把想法落地成行动。','才华被浪费、三心二意或有所隐瞒；也可能是明明有能力却不敢施展的自我怀疑。'],
-    ['女祭司','🌙','倾听直觉与潜意识的低语，先沉淀、观察，不急于表态，答案往往在静默中浮现。','忽视内心声音、过度理性化情绪，或对真相选择回避；也暗示信息尚未完全浮出水面。'],
-    ['女皇','🌸','丰盛、滋养与创造力的展现，感情与生活都在被温柔地照料着，适合让爱与美自然流淌。','过度付出导致耗竭、依赖他人肯定，或创造力被压抑；也反映对自我价值感的怀疑。'],
-    ['皇帝','👑','建立秩序、划定边界，用稳固的结构和责任感撑起局面，理性主导胜过情绪化。','控制欲过强、固执僵化，或权威结构正在松动；也可能是缺乏纪律、方向感缺失。'],
-    ['教皇','📿','依循传统、寻求可信赖的指引，从既有的智慧、制度或值得信任的人身上获得支持。','质疑教条、打破常规寻找自己的路，也提示墨守成规带来的束缚感。'],
-    ['恋人','💕','一次重要的选择或联结，诚实面对自己的心意，让关系建立在真实而非将就之上。','关系中的错位、犹豫不决或价值观冲突；也可能是逃避一个必须做出的选择。'],
-    ['战车','🏎️','意志力清晰、目标明确，凭借决心与掌控力排除干扰、勇往直前。','方向失控、内耗严重或过于急躁冒进；也可能是外部阻力让前进停滞。'],
-    ['力量','🦁','以温柔而坚定的方式驯服内心的恐惧与冲动，真正的力量来自耐心与自我接纳。','自我怀疑、情绪失控或压抑真实感受；也可能是滥用强硬手段而非柔性引导。'],
-    ['隐者','🏮','退回内在，独处沉思，给答案和洞见留出浮现的时间，无需急着向外求助。','过度孤立、逃避人群，或是该走出封闭、主动寻求连接的时候了。'],
-    ['命运之轮','🎡','周期性的转折正在发生，顺应变化的节奏，把握机运比强行掌控更有效。','感觉运气不站在自己这边、变化带来阻滞，或是抗拒不可避免的转变。'],
-    ['正义','⚖️','因果分明，诚实面对事实并做出公正的决定，一切都会得到应有的清算。','不公平、逃避责任或决策失衡；也可能是尚未看清全貌就妄下判断。'],
-    ['倒吊人','🙃','换一个角度看问题，主动的等待和暂停本身也是一种酝酿与蓄力。','无谓的牺牲、停滞不前带来的焦躁，或是抗拒必要的暂停与放手。'],
-    ['死神','🦋','一个阶段的结束为新事物腾出空间，放手旧模式才能让转化真正发生。','抗拒改变、执着于已经结束的关系或阶段，导致停滞与内耗。'],
-    ['节制','🍷','在两个极端之间寻求平衡与调和，耐心地把冲突的部分慢慢融合成新的整体。','失衡、过度或不足，缺乏耐心导致的冲突与不协调。'],
-    ['恶魔','⛓️','看清自己被什么样的执念、欲望或关系模式所束缚，直面阴影才能松开枷锁。','开始挣脱束缚、觉察到有害的依附关系，迈出解放自己的第一步。'],
-    ['塔','⚡','突如其来的震动打破了虚假的稳固，让被掩盖的真相浮出水面，随后才能重建。','逃避不可避免的崩塌、恐惧改变，或是余震未平、还在消化冲击。'],
-    ['星星','⭐','风暴过后重新燃起的希望与信任，温柔地疗愈自己，相信更好的正在靠近。','信心受挫、对未来感到迷茫，或是希望被现实一再消磨。'],
-    ['月亮','🌕','直觉活跃但真相朦胧不清，容易被情绪、幻觉或未知的恐惧牵着走，需谨慎分辨。','幻象逐渐澄清、隐藏的焦虑浮出水面，也可能是走出了一段困惑期。'],
-    ['太阳','☀️','明朗、喜悦与真实的成功，允许自己毫无保留地感受被看见的快乐。','短暂的阴霾遮住了本该有的光彩，也可能是过度乐观而忽略了细节。'],
-    ['审判','📯','一次觉醒的召唤，回顾过去做出总结，回应内心真正想要奔赴的方向。','自我评判过重、逃避该有的反思，或是难以放下过去的遗憾。'],
-    ['世界','🌍','一个完整周期的圆满收束，努力得到确认，也意味着新阶段即将展开。','事情尚未真正完结、缺乏收尾感，或是达成目标后仍感觉空虚。']
-  ].map(([name,emoji,mean,rmean])=>({ name, emoji, mean, rmean, suit:'大阿卡纳' }));
-
-  const suits = [
-    { suit:'权杖', emoji:'🔥', theme:'行动、热情、创造', rtheme:'行动受阻、冲动内耗或热情消退' },
-    { suit:'圣杯', emoji:'💧', theme:'情感、关系、直觉', rtheme:'情感淤堵、逃避感受或自我怀疑' },
-    { suit:'宝剑', emoji:'⚔️', theme:'思维、冲突、真相', rtheme:'思维混乱、言语伤人或过度防御' },
-    { suit:'星币', emoji:'🪙', theme:'物质、身体、现实', rtheme:'现实卡顿、匮乏焦虑或过度执着物质' }
-  ];
-  const ranks = [
-    ['王牌','全新的种子与潜能，一个纯粹而强烈的开端。','起步受阻、错失良机，或是能量还未准备好释放。'],
-    ['二','面临对峙或选择，需要在两者之间权衡取舍。','犹豫不决、关系失衡，或是逃避该做的决定。'],
-    ['三','初步的成果显现，合作与表达带来正向反馈。','团队摩擦、成果被延误，或缺乏认可带来的失落。'],
-    ['四','稳定下来，筑起一个可以喘息与扎根的空间。','停滞太久、安逸中藏着隐忧，或基础出现裂缝。'],
-    ['五','竞争、冲突或失落浮出水面，考验应对的方式。','冲突升级或选择逃避对抗，也可能是危机后的收尾。'],
-    ['六','过渡期中分享或短暂的胜利，气氛趋于缓和。','旧事重提、不对等的付出，或是迟来的认可。'],
-    ['七','需要坚持立场，防守当下已经拥有的成果。','力不从心、过度防备，或是该放弃无谓的坚持。'],
-    ['八','事情快速推进，变化接连而来，节奏加快。','进展受阻、延迟，或是方向感变得混乱。'],
-    ['九','接近完成，也带着疲惫，需要留一口气坚持。','身心俱疲、过度警惕，或是濒临崩溃边缘。'],
-    ['十','抵达顶点，收获与负担同时压在肩上。','不堪重负、该放下却仍在硬撑。'],
-    ['侍从','消息传来，带着稚嫩而真诚的学习心态。','消息延误、不成熟的判断，或是三分钟热度。'],
-    ['骑士','主动出击，带着热忱甚至急切地追求目标。','行动冲动鲁莽，或是半途而废、缺乏耐心。'],
-    ['王后','以成熟包容的姿态照料他人，也滋养自己。','情绪化、过度付出耗竭自己，或是缺乏安全感。'],
-    ['国王','承担起统领的责任，用外在权威稳住局面。','专断、滥用权力，或是责任缺位带来的失控。']
-  ];
-  const minors = [];
-  suits.forEach(s=>{
-    ranks.forEach(([rank, tip, rtip])=>{
-      minors.push({
-        name: s.suit + rank,
-        emoji: s.emoji,
-        mean: s.theme + ' · ' + tip,
-        rmean: s.rtheme + ' · ' + rtip,
-        suit: s.suit
-      });
-    });
-  });
-  return major.concat(minors);
-}
-
-function buildLenormand36(){
-  const cards = [
-    ['骑士','🐴','消息、访客或机会正在到来，事情将以较快的节奏向前推进。'],
-    ['三叶草','🍀','小而短暂的幸运，抓住眼前轻巧的机会，不必想得太复杂。'],
-    ['船','⛵','远行、跨越距离的联系，或一笔关于贸易与移动的进展。'],
-    ['房子','🏠','家庭与稳定的根基，一个可以安放归属感的私密领域。'],
-    ['树','🌳','健康与成长的根基，需要时间慢慢扎深、不能急于求成。'],
-    ['云','☁️','局势模糊不清、情绪阴晴不定，真相还没有完全显现。'],
-    ['蛇','🐍','局面复杂多绕，可能涉及诱惑、第三方或需要小心的关系。'],
-    ['棺材','⚰️','一个阶段彻底结束，释放旧事物才能让转变真正发生。'],
-    ['花束','💐','美好的邀请与欣赏正在靠近，值得被好好接收的心意。'],
-    ['镰刀','🗡️','突然的切断、决断的时刻，可能是收获也可能是风险。'],
-    ['鞭子','🪢','反复出现的摩擦或争执，需要正视而不是任由其发酵。'],
-    ['鸟','🐦','闲谈、焦虑或琐碎的信息交流，注意不要被小事扰乱心绪。'],
-    ['孩子','🧒','纯真、天真的新开始，一件事情还处在稚嫩的起步阶段。'],
-    ['狐狸','🦊','需要一些策略与精明，别把真实意图完全摆在明面上。'],
-    ['熊','🐻','权威、保护或压力的来源，力量集中在某一方手中。'],
-    ['星星','✨','清晰的希望与指引，灵感正在为下一步照亮方向。'],
-    ['鹳','🦩','正在发生的过渡与搬迁，旧的状态即将被新的取代。'],
-    ['狗','🐶','忠诚可靠的陪伴，一段值得信赖的友情或支持关系。'],
-    ['塔','🏛️','制度、边界或孤立的处境，也可能象征更高更远的视角。'],
-    ['花园','🌳','公开的社交场合，人际网络与外界关注在此汇聚。'],
-    ['山','⛰️','明显的阻碍与延迟，前方有一段需要翻越的坎坷。'],
-    ['十字路口','🛤️','面临选择与分岔，决定将带来不同的走向。'],
-    ['老鼠','🐭','悄悄的损耗与流失，无论是精力、金钱还是安全感。'],
-    ['心','❤️','情感的核心所在，一份真心实意，围绕爱与在意展开。'],
-    ['戒指','💍','承诺与契约，一段循环或已经确立的关系状态。'],
-    ['书','📖','尚未公开的秘密，或是需要学习、钻研的知识领域。'],
-    ['信','✉️','具体的信息、文件或书面往来，答案往往就在文字里。'],
-    ['男人','👨','一位男性角色，或偏外在、主动的行动力量。'],
-    ['女人','👩','一位女性角色，或偏内在、接收与感受的力量。'],
-    ['百合','🤍','成熟的和谐与平和，事情正走向安稳而不喧闹的状态。'],
-    ['太阳','🌞','活力、成功与显化，事情正朝着明朗的方向发展。'],
-    ['月亮','🌛','声誉与情绪的潮汐，你正被看见，也在意着被如何看待。'],
-    ['钥匙','🔑','关键的答案即将开启，一个长期悬而未决的问题有解了。'],
-    ['鱼','🐟','金钱与资源的流动，收入或机会正在循环起来。'],
-    ['锚','⚓','稳定的工作与长期的承诺，值得托付时间与心力。'],
-    ['十字','✝️','责任与负担并存，带着命运感的必经考验。']
-  ];
-  return cards.map(([name,emoji,mean])=>({ name, emoji, mean, suit:'雷诺曼' }));
-}
-
-const DIV_DECKS = {
-  tarot78: { label:'塔罗 78 张', build: buildTarot78, hasReversal: true },
-  lenormand36: { label:'雷诺曼 36 张', build: buildLenormand36, hasReversal: false }
-};
-
-let divState = {
-  deckType: 'tarot78',
-  shuffled: [],   // 当前洗好的牌堆（顶=可抽）
-  drawnIds: []    // 本轮已抽，防止重复（用 name+index）
-};
-
-function fisherYates(arr){
-  const a = arr.slice();
-  for(let i=a.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    const t = a[i]; a[i]=a[j]; a[j]=t;
-  }
-  return a;
-}
-
-function getActiveDivDeckDef(){
-  return DIV_DECKS[divState.deckType] || DIV_DECKS.tarot78;
-}
-
-function ensureDivDeckShuffled(force){
-  const def = getActiveDivDeckDef();
-  if(force || !divState.shuffled.length){
-    const base = def.build().map((c,i)=>({ ...c, _id: c.name + '#' + i }));
-    divState.shuffled = fisherYates(base);
-    divState.drawnIds = [];
-  }
-  updateDivDeckStatus();
-}
-
-function updateDivDeckStatus(){
-  const el = document.getElementById('divDeckStatus');
-  if(!el) return;
-  const def = getActiveDivDeckDef();
-  const left = divState.shuffled.length;
-  el.textContent = `当前：${def.label} · 牌堆剩余 ${left} 张 · 抽牌为纯随机洗牌后依次取顶牌`;
-}
-
-function onDivDeckChange(){
-  const sel = document.getElementById('divDeckType');
-  if(sel) divState.deckType = sel.value;
-  ensureDivDeckShuffled(true);
-  const wrap = document.getElementById('tarotResult');
-  if(wrap) wrap.innerHTML = '<div class="empty-note">已切换牌组并重新洗牌，可以抽三张了</div>';
-}
-
-function shuffleDivDeck(){
-  ensureDivDeckShuffled(true);
-  const toast = document.getElementById('saveToast');
-  if(toast){
-    toast.textContent = '已重新洗牌';
-    toast.classList.add('show');
-    setTimeout(()=>toast.classList.remove('show'), 1200);
-  }
-  updateDivDeckStatus();
-}
-
-const TAROT_POSITIONS = [
-  { key:'past', title:'第一张 · 过去 / 现状' },
-  { key:'present', title:'第二张 · 现在 / 建议' },
-  { key:'future', title:'第三张 · 走向 / 答案' }
-];
-
-async function drawTarotThree(){
-  ensureDivDeckShuffled(false);
-  const def = getActiveDivDeckDef();
-  if(divState.shuffled.length < 3){
-    // 不够三张就整副再洗一次
-    ensureDivDeckShuffled(true);
-  }
-  if(divState.shuffled.length < 3){
-    alert('牌组异常，请重新洗牌');
-    return;
-  }
-  // 从牌堆顶部依次取三张（不放回）——模拟真实抽牌
-  const drawn = [];
-  for(let i=0;i<3;i++){
-    const card = divState.shuffled.shift();
-    const reversed = def.hasReversal ? (Math.random() < 0.5) : false; // 正逆纯 50/50
-    drawn.push({
-      name: card.name,
-      emoji: card.emoji,
-      suit: card.suit || '',
-      mean: card.mean,
-      reversed,
-      position: TAROT_POSITIONS[i].title,
-      note: reversed
-        ? ('逆位：' + (card.rmean || (card.mean + ' —— 能量受阻、内收或需要反向理解。')))
-        : ('正位：' + card.mean)
-    });
-  }
-  updateDivDeckStatus();
-  const qEl = document.getElementById('tarotQuestion');
-  const question = qEl ? qEl.value.trim() : '';
-  const reading = {
-    id: uid(),
-    time: Date.now(),
-    deck: def.label,
-    question: question || '今日运势',
-    cards: drawn
-  };
-  // 先把结果显示出来，再尝试持久化——即使存储失败（比如通过 content:// 方式打开、
-  // 或者 IndexedDB 暂时不可用），本次抽牌结果依然能正常看到解析。
-  renderTarotResult(reading);
-  try{
-    tarotHistory.unshift(reading);
-    if(tarotHistory.length > 20) tarotHistory = tarotHistory.slice(0,20);
-    await sSet('tarot-history', tarotHistory);
-  }catch(err){
-    console.error('保存占卜历史失败：', err);
-  }
-  if(currentView === 'divHistory') renderDivHistoryList();
-}
-
-function renderTarotResult(reading){
-  const wrap = document.getElementById('tarotResult');
-  if(!wrap || !reading) return;
-  wrap.innerHTML = `<div class="box">
-    <div class="box-title">本次解读 · ${reading.deck||''}</div>
-    <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">问题：${reading.question}</div>
-    ${reading.cards.map(c=>`
-      <div style="border:1px solid var(--rule);padding:12px;margin-bottom:10px;background:var(--glass-bg);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <span style="font-family:'Noto Serif SC',serif;font-weight:700;">${c.emoji} ${c.name}${c.reversed?'（逆位）':''}</span>
-          <span class="stamp-tag" style="transform:none;flex-shrink:0;">${c.position}</span>
-        </div>
-        ${c.suit?`<div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">${c.suit}</div>`:''}
-        <div style="font-size:13px;margin-top:8px;line-height:1.55;">${c.note}</div>
-      </div>`).join('')}
-  </div>`;
-}
-
-let divHistoryOpenId = null; // 当前展开查看解析的那一条历史记录 id
-
-function toggleDivHistoryDetail(id){
-  divHistoryOpenId = (divHistoryOpenId === id) ? null : id;
-  renderDivHistoryList();
-}
-
-function renderDivHistoryList(){
-  const wrap = document.getElementById('divHistoryList');
-  if(!wrap) return;
-  wrap.innerHTML = tarotHistory.length ? tarotHistory.map(r=>{
-    const names = (r.cards||[]).map(c=>c.name+(c.reversed?'（逆位）':'')).join(' · ');
-    const isOpen = divHistoryOpenId === r.id;
-    const detail = isOpen ? `
-      <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--rule);">
-        ${(r.cards||[]).map(c=>`
-          <div style="border:1px solid var(--rule);padding:10px;margin-bottom:8px;background:var(--glass-bg);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-              <span style="font-family:'Noto Serif SC',serif;font-weight:700;">${c.emoji||''} ${c.name}${c.reversed?'（逆位）':''}</span>
-              <span class="stamp-tag" style="transform:none;flex-shrink:0;">${c.position||''}</span>
-            </div>
-            ${c.suit?`<div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">${c.suit}</div>`:''}
-            <div style="font-size:13px;margin-top:8px;line-height:1.55;">${c.note}</div>
-          </div>`).join('')}
-      </div>` : '';
-    return `<div class="list-item" style="display:block;cursor:pointer;" onclick="toggleDivHistoryDetail('${r.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-        <div><b>${r.question}</b><div class="meta">${new Date(r.time).toLocaleString('zh-CN')} · ${r.deck||''} · ${names}</div></div>
-        <span class="del" onclick="event.stopPropagation();deleteTarotReading('${r.id}')">✕</span>
-      </div>
-      ${detail}
-    </div>`;
-  }).join('') : '<div class="empty-note">还没有抽过牌，去占卜抽牌页面试试吧</div>';
-}
-
-async function deleteTarotReading(id){
-  tarotHistory = tarotHistory.filter(r=>r.id!==id);
-  if(divHistoryOpenId === id) divHistoryOpenId = null;
-  if(currentView === 'divHistory') renderDivHistoryList();
-  try{
-    await sSet('tarot-history', tarotHistory);
-  }catch(err){
-    console.error('保存占卜历史失败：', err);
-  }
-}
-
-function renderRecipes(){
-  const sel = document.getElementById('divDeckType');
-  if(sel) sel.value = divState.deckType || 'tarot78';
-  ensureDivDeckShuffled(false);
-  const wrap = document.getElementById('tarotResult');
-  if(wrap && !wrap.innerHTML.trim()){
-    wrap.innerHTML = '<div class="empty-note">洗牌后抽三张，模拟正式占卜</div>';
-  }
-}
-function addRecipe(){ drawTarotThree(); }
-
 /* ---------- 宠物：奇遇 / 照看 可折叠 ---------- */
 
 /* ============================================================
@@ -4041,7 +3705,7 @@ async function saveProfile(){
 }
 async function resetAll(){
   if(!confirm('确定要清空全部数据吗？这个操作无法撤销。')) return;
-  const keys = ['profile','chat-settings','chat-messages','cards-data','ledger-entries','period-entries','diary-entries','recipe-entries','theme-settings','moments-posts','letters','inbox-letters','call-logs','proactive-state','chat-unread','letter-unread','inbox-letter-unread','moments-unread','life-photos','status-pool','today-status','custom-bubble-css','rec-store-migrated-v2','moyu-state','proactive-msg-settings','moment-interact-settings','splice-cards-enabled','tarot-history'];
+  const keys = ['profile','chat-settings','chat-messages','cards-data','ledger-entries','period-entries','diary-entries','theme-settings','moments-posts','letters','inbox-letters','call-logs','proactive-state','chat-unread','letter-unread','inbox-letter-unread','moments-unread','life-photos','status-pool','today-status','custom-bubble-css','rec-store-migrated-v2','moyu-state','proactive-msg-settings','moment-interact-settings','splice-cards-enabled'];
   for(const k of keys){
     try{ if(hasCloudStorage()) await window.storage.delete(k, false); }catch(e){}
     try{ localStorage.removeItem('EVAN:'+k); }catch(e){}
@@ -4060,7 +3724,7 @@ async function exportBackup(){
   ]);
   const data = {
     profile, chatSettings, chatMessages: fullChat, cardsData, ledgerEntries, periodEntries,
-    diaryEntries, recipeEntries, tarotHistory, momentsPosts: fullMoments, letters, inboxLetters, callLogs, themeSettings, proactiveState,
+    diaryEntries, momentsPosts: fullMoments, letters, inboxLetters, callLogs, themeSettings, proactiveState,
     lifePhotos: fullPhotos, statusPool, todayStatus, customBubbleCSS, moyuState, proactiveMsgSettings, momentInteractSettings, spliceCardsEnabled,
     exportedAt: Date.now()
   };
@@ -4089,8 +3753,6 @@ function onImportBackupFile(e){
     ledgerEntries = data.ledgerEntries || [];
     periodEntries = data.periodEntries || [];
     diaryEntries = data.diaryEntries || [];
-    recipeEntries = data.recipeEntries || [];
-    tarotHistory = data.tarotHistory || [];
     const importedMoments = data.momentsPosts || [];
     letters = data.letters || [];
     inboxLetters = data.inboxLetters || [];
@@ -4111,8 +3773,6 @@ function onImportBackupFile(e){
     await sSet('ledger-entries', ledgerEntries);
     await sSet('period-entries', periodEntries);
     await sSet('diary-entries', diaryEntries);
-    await sSet('recipe-entries', recipeEntries);
-    await sSet('tarot-history', tarotHistory);
     await sSet('letters', letters);
     await sSet('inbox-letters', inboxLetters);
     await sSet('call-logs', callLogs);
@@ -4136,7 +3796,7 @@ function onImportBackupFile(e){
     applyTheme();
     applyCustomBubbleCSSToPage();
     renderHomeProfile(); renderChat(); renderCardsView(); renderLedger(); renderPeriod();
-    renderRecipes(); renderDiary(); renderBeautify(); renderMoments(); renderLetters();
+    renderDiary(); renderBeautify(); renderMoments(); renderLetters();
     renderInboxLetters(); renderCallLog(); renderLifePhotos(); renderTodayStatusHome();
     resumeLetterTimers();
     resumeInboxLetterReplyTimers();
