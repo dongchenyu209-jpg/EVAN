@@ -1677,9 +1677,17 @@ function onLifePhotoFile(e){
     const reader = new FileReader();
     reader.onload = async (ev) => {
       const compressed = await compressImage(ev.target.result, 800); // 压缩处理
-      const photo = { id:uid(), src: compressed, time: Date.now() };
-      lifePhotos.unshift(photo);
-      await recPut('lifePhotos', photo);
+      if(compressed){
+        const photo = { id:uid(), src: compressed, time: Date.now() };
+        lifePhotos.unshift(photo);
+        await recPut('lifePhotos', photo);
+      }
+      remaining--;
+      if(remaining===0){
+        renderLifePhotos();
+      }
+    };
+    reader.onerror = () => { // 读取失败也别让整批添加卡住
       remaining--;
       if(remaining===0){
         renderLifePhotos();
@@ -1729,6 +1737,7 @@ async function compressImage(dataUrl, maxWidth = 800) {
       
       resolve(canvas.toDataURL('image/jpeg', 0.85));
     };
+    img.onerror = () => resolve(null); // 解码失败（例如手机相册里的特殊格式照片）时别让整批添加卡死，跳过这张
     img.src = dataUrl;
   });
 }
@@ -2040,7 +2049,7 @@ async function editCardText(g, idx){
     <div class="drawer-head"><h3>修改字卡内容</h3><span class="close-x" onclick="closeOverlay()">✕</span></div>
     <label class="field">内容</label>
     <textarea id="editCardTextInput" style="min-height:90px;">${String(current).replace(/</g,'&lt;')}</textarea>
-    <div class="btn-row"><div class="btn" onclick="confirmEditCardText(${JSON.stringify(g)}, ${idx})">保存</div></div>
+    <div class="btn-row"><div class="btn" onclick="confirmEditCardText('${escAttr(g)}', ${idx})">保存</div></div>
   `);
   setTimeout(()=>{ const el=document.getElementById('editCardTextInput'); if(el) el.focus(); }, 50);
 }
@@ -2112,7 +2121,7 @@ async function renameGroup(oldName){
     <div class="drawer-head"><h3>修改分组名称</h3><span class="close-x" onclick="closeOverlay()">✕</span></div>
     <label class="field">新名称</label>
     <input type="text" id="renameGroupInput" value="${String(oldName).replace(/"/g,'&quot;')}" maxlength="30">
-    <div class="btn-row"><div class="btn" onclick="confirmRenameGroup(${JSON.stringify(oldName)})">保存</div></div>
+    <div class="btn-row"><div class="btn" onclick="confirmRenameGroup('${escAttr(oldName)}')">保存</div></div>
   `);
   setTimeout(()=>{ const el=document.getElementById('renameGroupInput'); if(el){ el.focus(); el.select(); } }, 50);
 }
