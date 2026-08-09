@@ -259,6 +259,7 @@
 
   /* generic card/list */
   .box{ border:1.5px solid var(--ink); background:var(--glass-bg); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); padding:14px; margin-bottom:14px; box-shadow: none; }
+  .card-reply-box{ border:1.5px solid rgba(156,47,59,0.18); background:rgba(156,47,59,0.06); border-radius:16px; padding:16px 18px; font-size:14.5px; line-height:1.7; color:var(--ink); }
   .box-title{ font-family:'Noto Serif SC',serif; font-weight:700; font-size:14px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between;}
   label.field{ display:block; font-size:12px; color:var(--ink-soft); margin:10px 0 4px; }
   input[type=text], input[type=number], input[type=date], select, textarea{
@@ -883,7 +884,7 @@
       <div class="icon-btn" style="margin-left:auto;" onclick="openAiConfigPanel()" title="AI配置">🤖</div>
     </div>
     <div class="box">
-      <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px;">洗牌后按牌阵抽取（不放回）。正逆位纯随机。梦占用内置/角色牌意；现占调用你配置的 AI 解牌。</p>
+      <p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px;">洗牌后按牌阵抽取（不放回），先显示每张牌的客观牌意；抽完后可以点下面的按钮让 AI 解读，随时可以在「角色语气」和「客观语气」之间切换重新生成。</p>
       <label class="field">牌组</label>
       <select id="divDeckType" onchange="onDivDeckChange()">
         <option value="tarot78">塔罗 78 张（大阿卡纳 + 小阿卡纳）</option>
@@ -894,12 +895,6 @@
         <option value="1">单张牌 · 核心指引</option>
         <option value="3" selected>三张牌 · 过去/现在/未来</option>
         <option value="5">五张牌 · 更细分析</option>
-      </select>
-      <label class="field">解读模式</label>
-      <select id="divMode">
-        <option value="dream_obj">梦占 · 客观解读（内置牌意）</option>
-        <option value="dream_role">梦占 · 角色解读（以 TA 视角）</option>
-        <option value="real_ai">现占 · AI 解牌（需配置 API）</option>
       </select>
       <label class="field">你的问题（可选）</label>
       <textarea id="tarotQuestion" placeholder="例如：我想知道 TA 对这件事怎么看？" style="min-height:64px;"></textarea>
@@ -3532,6 +3527,11 @@ function renderDivHistoryList(){
             ${c.suit?`<div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">${c.suit}</div>`:''}
             <div style="font-size:13px;margin-top:8px;line-height:1.55;">${c.note}</div>
           </div>`).join('')}
+        <div class="btn-row" style="margin-top:2px;" onclick="event.stopPropagation();">
+          <div class="btn outline" onclick="interpretDivReading('${r.id}','role')">🎭 角色解读</div>
+          <div class="btn outline" onclick="interpretDivReading('${r.id}','obj')">📖 客观解读</div>
+        </div>
+        <div data-tarot-ai-block="${r.id}" onclick="event.stopPropagation();">${r.aiText ? renderTarotAiBlockInner(r) : ''}</div>
       </div>` : '';
     return `<div class="list-item" style="display:block;cursor:pointer;" onclick="toggleDivHistoryDetail('${r.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
@@ -5015,19 +5015,30 @@ let aiSettings = {
   baseUrl: 'https://api.deepseek.com/v1',
   apiKey: '',
   model: 'deepseek-chat',
-  enabled: false
+  enabled: false,
+  characterPrompt: ''
 };
 const AI_PROVIDER_PRESETS = {
-  openai:   { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini', label: 'OpenAI' },
-  deepseek: { baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat', label: 'DeepSeek' },
-  silicon:  { baseUrl: 'https://api.siliconflow.cn/v1', model: 'deepseek-ai/DeepSeek-V3', label: '硅基流动' },
-  custom:   { baseUrl: '', model: '', label: '自定义' }
+  openai:    { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini', label: 'OpenAI' },
+  deepseek:  { baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat', label: 'DeepSeek 官方' },
+  silicon:   { baseUrl: 'https://api.siliconflow.cn/v1', model: 'deepseek-ai/DeepSeek-V3', label: '硅基流动' },
+  dashscope: { baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'deepseek-v4-flash', label: '阿里云百炼 (DashScope)' },
+  custom:    { baseUrl: '', model: '', label: '自定义' }
 };
+// 常用模型名建议（仅供下拉快选，模型名称输入框本身不限于此列表，可任意填写）
+const AI_MODEL_SUGGESTIONS = [
+  'deepseek-chat', 'deepseek-reasoner',
+  'deepseek-v4', 'deepseek-v4-flash', 'deepseek-v3',
+  'qwen-turbo', 'qwen-plus', 'qwen-max',
+  'gpt-4o-mini', 'gpt-4o',
+  'deepseek-ai/DeepSeek-V3'
+];
 
 async function loadAiSettings(){
   aiSettings = await sGet('ai-settings', aiSettings);
   if(!aiSettings.provider) aiSettings.provider = 'deepseek';
   if(typeof aiSettings.enabled !== 'boolean') aiSettings.enabled = !!(aiSettings.apiKey);
+  if(typeof aiSettings.characterPrompt !== 'string') aiSettings.characterPrompt = '';
 }
 async function saveAiSettingsFromForm(){
   const provider = (document.getElementById('aiProvider')||{}).value || 'deepseek';
@@ -5035,6 +5046,7 @@ async function saveAiSettingsFromForm(){
   aiSettings.baseUrl = ((document.getElementById('aiBaseUrl')||{}).value || '').trim().replace(/\/$/, '');
   aiSettings.apiKey = ((document.getElementById('aiApiKey')||{}).value || '').trim();
   aiSettings.model = ((document.getElementById('aiModel')||{}).value || '').trim();
+  aiSettings.characterPrompt = ((document.getElementById('aiCharacterPrompt')||{}).value || '').trim();
   aiSettings.enabled = !!(aiSettings.apiKey && aiSettings.baseUrl && aiSettings.model);
   await sSet('ai-settings', aiSettings);
   alert(aiSettings.enabled ? 'AI 配置已保存' : '已保存，但 Key / 地址 / 模型未填全，解读功能暂不可用');
@@ -5057,8 +5069,9 @@ function openAiConfigPanel(){
     <label class="field">API 服务商</label>
     <select id="aiProvider" onchange="onAiProviderChange()">
       <option value="openai" ${aiSettings.provider==='openai'?'selected':''}>OpenAI</option>
-      <option value="deepseek" ${aiSettings.provider==='deepseek'?'selected':''}>DeepSeek</option>
+      <option value="deepseek" ${aiSettings.provider==='deepseek'?'selected':''}>DeepSeek 官方</option>
       <option value="silicon" ${aiSettings.provider==='silicon'?'selected':''}>硅基流动</option>
+      <option value="dashscope" ${aiSettings.provider==='dashscope'?'selected':''}>阿里云百炼 (DashScope)</option>
       <option value="custom" ${aiSettings.provider==='custom'?'selected':''}>自定义</option>
     </select>
     <label class="field">API Base URL</label>
@@ -5066,8 +5079,15 @@ function openAiConfigPanel(){
     <label class="field">API Key</label>
     <input type="password" id="aiApiKey" value="${(aiSettings.apiKey||'').replace(/"/g,'&quot;')}" placeholder="sk-…">
     <label class="field">模型名称</label>
-    <input type="text" id="aiModel" value="${(aiSettings.model||'').replace(/"/g,'&quot;')}" placeholder="deepseek-chat">
-    <div style="font-size:11px;color:var(--ink-soft);margin-top:6px;">部分浏览器可能因跨域（CORS）无法直连某些 API；若失败可换支持浏览器调用的接口，或自建中转。</div>
+    <input type="text" id="aiModel" list="aiModelSuggestions" value="${(aiSettings.model||'').replace(/"/g,'&quot;')}" placeholder="deepseek-chat / deepseek-v4-flash …">
+    <label class="field" style="margin-top:12px;">AI 设定提示词</label>
+    <textarea id="aiCharacterPrompt" rows="6" placeholder="由你自己填写角色设定、性格、关系、说话方式、世界观等。留空则不额外设定。">${escHtml(aiSettings.characterPrompt||'')}</textarea>
+    <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">这里不会写死任何角色设定。你填写的内容会作为额外设定提供给 AI，主要用于「角色解读」和字卡解读。</div>
+    <datalist id="aiModelSuggestions">
+      ${AI_MODEL_SUGGESTIONS.map(m=>`<option value="${m}"></option>`).join('')}
+    </datalist>
+    <div style="font-size:11px;color:var(--ink-soft);margin-top:6px;">模型名称可自由填写，不限于下拉建议里的几个——只要所选服务商支持该模型 ID 即可，比如 DeepSeek 的 v4/v4-flash、reasoner，或阿里云百炼下的其它模型。</div>
+    <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">部分浏览器可能因跨域（CORS）无法直连某些 API；若失败可换支持浏览器调用的接口，或自建中转。</div>
     <div class="btn-row" style="margin-top:14px;">
       <div class="btn" onclick="saveAiSettingsFromForm()">保存</div>
       <div class="btn outline" onclick="testAiConnection()">测试连接</div>
@@ -5121,7 +5141,7 @@ async function testAiConnection(){
   }
 }
 
-/* ---- 字卡 AI 解读（聊天消息） ---- */
+/* ---- 字卡 AI 解读（聊天消息）：AI 扮演角色本人，第一人称俏皮回应字卡内容 ---- */
 async function interpretCardMessage(msgId){
   const msg = (chatMessages||[]).find(m=>m.id===msgId);
   if(!msg || !msg.content){ alert('找不到这条消息'); return; }
@@ -5137,25 +5157,29 @@ async function interpretCardMessage(msgId){
       const who = m.from==='user' ? (profile.myName||'我') : (chatSettings.companionName||'TA');
       return who + '：' + m.content;
     }).join('\n');
+  const name = chatSettings.companionName || 'TA';
+  const myName = profile.myName || '我';
   openOverlay(`
-    <div class="drawer-head"><h3>🤖 AI 字卡解读</h3><span class="close-x" onclick="closeOverlay()">✕</span></div>
-    <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;">原文</div>
+    <div class="drawer-head"><h3>🤖 ${escHtml(name)}的解读</h3><span class="close-x" onclick="closeOverlay()">✕</span></div>
+    <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;">字卡原文</div>
     <div class="box" style="font-size:14px;line-height:1.55;">${escHtml(msg.content)}</div>
-    <div id="aiInterpretBody" class="box" style="margin-top:10px;min-height:80px;font-size:13.5px;line-height:1.6;color:var(--ink-soft);">正在解读…</div>
+    <div id="aiInterpretBody" class="card-reply-box" style="margin-top:10px;min-height:80px;">正在解读…</div>
   `);
   try{
-    const name = chatSettings.companionName || 'TA';
-    const system = `你是情感向的字卡解读助手。根据对话上下文，解读对方发出的字卡/短句背后可能的情感含义。语气温柔、具体，不要编造对话里没有的事实。用中文回答，分「字面」「可能的心情」「对关系的暗示」三点，简洁。对方名字是「${name}」。`;
-    const user = `最近对话：\n${ctx}\n\n请解读最后一条（${name} 发出）的字卡含义。`;
+    const customPrompt = (aiSettings.characterPrompt||'').trim();
+    const system = `你正在协助解读「${name}」的字卡，对方是「${myName}」。请基于下面的用户自定义设定进行角色化回应；不要自行添加与设定冲突的固定人格或关系设定。
+${customPrompt ? `【用户自定义设定】\n${customPrompt}\n` : ''}
+刚才「${name}」发出了一张只有几个字的"字卡"（word card），请以「${name}」的第一人称回应/解释这张字卡背后的心思，保持自然、贴合上下文。不要写成旁观者分析或分点格式，不要编造设定中没有依据的具体事实。中文，2~4句话。`;
+    const user = `最近对话：\n${ctx}\n\n请以「${name}」第一人称回应最后一条字卡「${msg.content}」。`;
     const result = await callChatCompletion([
       { role:'system', content: system },
       { role:'user', content: user }
-    ], { temperature: 0.75, max_tokens: 800 });
+    ], { temperature: 0.85, max_tokens: 400 });
     const body = document.getElementById('aiInterpretBody');
-    if(body){ body.style.color = 'var(--ink)'; body.textContent = result; }
+    if(body){ body.textContent = result; }
   }catch(err){
     const body = document.getElementById('aiInterpretBody');
-    if(body) body.textContent = '解读失败：' + (err && err.message ? err.message : err);
+    if(body){ body.classList.remove('card-reply-box'); body.style.color='var(--rouge)'; body.textContent = '解读失败：' + (err && err.message ? err.message : err); }
   }
 }
 function escHtml(s){
@@ -5166,7 +5190,6 @@ function escHtml(s){
 // divMode: dream_role | dream_obj | real_ai
 // divSpread: 1 | 3 | 5
 if(!divState.shuffled) divState.shuffled = [];
-divState.mode = divState.mode || 'dream_obj';
 divState.spread = divState.spread || 3;
 
 function getSpreadPositions(n){
@@ -5177,11 +5200,8 @@ function getSpreadPositions(n){
 async function drawTarotSpread(){
   const qEl = document.getElementById('tarotQuestion');
   const question = (qEl && qEl.value || '').trim() || '今日指引';
-  const modeEl = document.getElementById('divMode');
   const spreadEl = document.getElementById('divSpread');
-  const mode = (modeEl && modeEl.value) || divState.mode || 'dream_obj';
   const spread = parseInt((spreadEl && spreadEl.value) || divState.spread || 3, 10);
-  divState.mode = mode;
   divState.spread = spread;
   ensureDivDeckShuffled(false);
   const deck = divState.shuffled || [];
@@ -5207,61 +5227,27 @@ async function drawTarotSpread(){
   }
   updateDivDeckStatus();
 
+  // 抽完先只展示客观牌意，AI 解读留给后面的按钮单独触发
   const reading = {
     id: uid(),
     question,
     time: Date.now(),
     deck: divState.deckType === 'lenormand36' ? '雷诺曼36' : '塔罗78',
-    mode,
     spread,
     cards: drawn,
-    aiText: null
+    aiText: null,
+    aiVoice: null
   };
-
-  const wrap = document.getElementById('tarotResult');
-  if(wrap){
-    wrap.innerHTML = renderTarotResultHtml(reading) + (mode==='real_ai' ? '<div class="box" id="tarotAiBox" style="margin-top:10px;color:var(--ink-soft);">AI 正在解牌…</div>' : '');
-  }
-
-  if(mode === 'real_ai'){
-    if(!aiSettings.apiKey){
-      const box = document.getElementById('tarotAiBox');
-      if(box) box.innerHTML = '尚未配置 AI。<span class="btn outline" style="padding:4px 10px;margin-left:8px;" onclick="openAiConfigPanel()">去配置</span>';
-    } else {
-      try{
-        const name = chatSettings.companionName || 'TA';
-        const cardDesc = drawn.map(c=>`${c.position}：${c.emoji||''}${c.name}${c.reversed?'（逆位）':''} —— ${c.note}`).join('\n');
-        const system = `你是专业但温柔的塔罗解读师。根据牌面与问题给出连贯解读。用中文，结构清晰：总览、逐张要点、综合建议。不要装神弄鬼，标明仅供娱乐参考。提问者关心的对象可称为「${name}」。`;
-        const user = `问题：${question}\n牌阵（${spread}张）：\n${cardDesc}`;
-        const aiText = await callChatCompletion([
-          { role:'system', content: system },
-          { role:'user', content: user }
-        ], { temperature: 0.8, max_tokens: 1500 });
-        reading.aiText = aiText;
-        const box = document.getElementById('tarotAiBox');
-        if(box){ box.style.color='var(--ink)'; box.style.whiteSpace='pre-wrap'; box.textContent = aiText; }
-      }catch(err){
-        const box = document.getElementById('tarotAiBox');
-        if(box) box.textContent = 'AI 解牌失败：' + (err && err.message ? err.message : err);
-      }
-    }
-  } else if(mode === 'dream_role'){
-    // 角色向：把牌意改写成「TA 可能的状态」口吻
-    const name = chatSettings.companionName || 'TA';
-    reading.cards = reading.cards.map(c=>({
-      ...c,
-      note: `从「${name}」的视角看：` + (c.note||'')
-    }));
-    if(wrap) wrap.innerHTML = renderTarotResultHtml(reading);
-  }
 
   tarotHistory.unshift(reading);
   if(tarotHistory.length > 80) tarotHistory = tarotHistory.slice(0,80);
   try{ await sSet('tarot-history', tarotHistory); }catch(e){}
+
+  const wrap = document.getElementById('tarotResult');
+  if(wrap) wrap.innerHTML = renderTarotResultHtml(reading);
 }
 
 function renderTarotResultHtml(reading){
-  const modeLabel = reading.mode==='real_ai' ? '现占·AI' : (reading.mode==='dream_role' ? '梦占·角色' : '梦占·客观');
   const cardsHtml = (reading.cards||[]).map(c=>`
     <div style="border:1px solid var(--rule);padding:12px;margin-bottom:10px;background:var(--glass-bg);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
@@ -5271,13 +5257,66 @@ function renderTarotResultHtml(reading){
       ${c.suit?`<div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">${c.suit}</div>`:''}
       <div style="font-size:13px;margin-top:8px;line-height:1.55;">${c.note||''}</div>
     </div>`).join('');
+  const aiBlockHtml = reading.aiText ? renderTarotAiBlockInner(reading) : '';
   return `
     <div class="box">
       <div style="font-family:'Noto Serif SC',serif;font-weight:700;margin-bottom:6px;">${escHtml(reading.question||'')}</div>
-      <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:12px;">${modeLabel} · ${reading.deck||''} · ${reading.spread||3} 张</div>
+      <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:12px;">${reading.deck||''} · ${reading.spread||3} 张</div>
       ${cardsHtml}
-      ${reading.aiText ? `<div style="margin-top:8px;padding-top:10px;border-top:1px dashed var(--rule);white-space:pre-wrap;font-size:13.5px;line-height:1.6;">${escHtml(reading.aiText)}</div>` : ''}
+      <div class="btn-row" style="margin-top:2px;">
+        <div class="btn outline" onclick="interpretDivReading('${reading.id}','role')">🎭 角色解读</div>
+        <div class="btn outline" onclick="interpretDivReading('${reading.id}','obj')">📖 客观解读</div>
+      </div>
+      <div data-tarot-ai-block="${reading.id}">${aiBlockHtml}</div>
     </div>`;
+}
+
+function renderTarotAiBlockInner(reading){
+  const name = chatSettings.companionName || 'TA';
+  const label = reading.aiVoice==='role' ? ('🎭 角色解读 · ' + name) : '📖 客观解读';
+  return `<div class="card-reply-box" style="margin-top:10px;white-space:pre-wrap;">
+    <div style="font-size:11px;color:var(--ink-soft);margin-bottom:6px;">${escHtml(label)}</div>
+    ${escHtml(reading.aiText||'')}
+  </div>`;
+}
+
+function tarotAiBlockEls(readingId){
+  return Array.from(document.querySelectorAll('[data-tarot-ai-block="'+readingId+'"]'));
+}
+/* ---- 塔罗 AI 解读：抽完牌后单独触发，可在「角色」/「客观」之间来回切换重新生成 ---- */
+async function interpretDivReading(readingId, voice){
+  const reading = tarotHistory.find(r=>r.id===readingId);
+  if(!reading){ alert('找不到这次占卜记录'); return; }
+  if(!aiSettings.apiKey){ openAiConfigPanel(); return; }
+  const blockEls = tarotAiBlockEls(readingId);
+  blockEls.forEach(el=>{ el.innerHTML = `<div class="card-reply-box" style="margin-top:10px;">正在解读…</div>`; });
+  try{
+    const name = chatSettings.companionName || 'TA';
+    const myName = profile.myName || '我';
+    const cardDesc = (reading.cards||[]).map(c=>`${c.position}：${c.emoji||''}${c.name}${c.reversed?'（逆位）':''} —— ${c.note}`).join('\n');
+    let system, temperature;
+    if(voice === 'role'){
+      const customPrompt = (aiSettings.characterPrompt||'').trim();
+      system = `你正在进行塔罗角色解读。请基于下面的用户自定义设定进行回应；不要自行添加与设定冲突的固定人格或关系设定。
+${customPrompt ? `【用户自定义设定】\n${customPrompt}\n` : ''}
+下面给出这次塔罗抽牌的客观牌意，请结合牌意，以「${name}」的第一人称、自然地跟「${myName}」聊聊这几张牌可能在说什么。内容必须基于牌面展开，不要脱离牌面瞎编，也不要写成分点列表。中文，几段自然的话即可。`;
+      temperature = 0.85;
+    } else {
+      system = `你是专业但温柔的塔罗解读师，结合牌面客观含义给出连贯解读。用中文，结构清晰：总览、逐张要点、综合建议。不要装神弄鬼，可在结尾简短提醒仅供娱乐参考。`;
+      temperature = 0.7;
+    }
+    const user = `问题：${reading.question||'今日指引'}\n牌阵（${(reading.cards||[]).length}张，${reading.deck||''}）：\n${cardDesc}`;
+    const aiText = await callChatCompletion([
+      { role:'system', content: system },
+      { role:'user', content: user }
+    ], { temperature, max_tokens: 1200 });
+    reading.aiText = aiText;
+    reading.aiVoice = voice;
+    try{ await sSet('tarot-history', tarotHistory); }catch(e){}
+    tarotAiBlockEls(readingId).forEach(el=>{ el.innerHTML = renderTarotAiBlockInner(reading); });
+  }catch(err){
+    tarotAiBlockEls(readingId).forEach(el=>{ el.innerHTML = `<div class="card-reply-box" style="margin-top:10px;color:var(--rouge);">解读失败：${escHtml((err&&err.message)||String(err))}</div>`; });
+  }
 }
 
 // 兼容旧入口
