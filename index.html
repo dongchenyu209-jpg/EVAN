@@ -1314,15 +1314,6 @@ let proactiveMsgSettings = { enabled: true, minMinutes: 1, maxMinutes: 60 }; // 
 let momentInteractSettings = { likeProb: 60, commentProb: 60, replyProb: 60, minDays: 1, maxDays: 15 };
 // 拼字卡：开启后回复会随机把多张字卡拼成一段再发
 let spliceCardsEnabled = false;
-// AI 解读
-let aiSettings = {
-  enabled: false,
-  apiUrl: '',
-  apiKey: '',
-  model: 'deepseek-v3',
-  contextCount: 8,
-  systemPrompt: '你是{{name}}。现在要把下面给出的「字卡」自然解读成一句（或几句）你本人会说出口的话。要求：始终用第一人称「我」；语气像和恋人日常聊天；不要解释、不要跳出角色、不要说自己是AI；不要逐字复读字卡，要把字卡的意思融进自然口语里；尽量简短，1～3句。'
-};
 let currentView = 'home';
 let themeSettings = { accent:'#9C2F3B', paperStyle:'grid', bodyFont:'sans', secondaryFont:'serif', inkColor:'', nameColor:'', customBg:'', customBgImage:'', annivBg:'', annivBgImage:'' };
 let customBubbleCSS = '';
@@ -1417,9 +1408,6 @@ async function init(){
   momentInteractSettings.minDays = Math.max(1, Math.min(30, momentInteractSettings.minDays));
   momentInteractSettings.maxDays = Math.max(momentInteractSettings.minDays, Math.min(30, momentInteractSettings.maxDays));
   spliceCardsEnabled = await sGet('splice-cards-enabled', false);
-  aiSettings = await sGet('ai-settings', aiSettings);
-  if(typeof aiSettings.contextCount !== 'number') aiSettings.contextCount = 8;
-  if(!aiSettings.systemPrompt) aiSettings.systemPrompt = '你是{{name}}。现在要把下面给出的「字卡」自然解读成一句（或几句）你本人会说出口的话。要求：始终用第一人称「我」；语气像和恋人日常聊天；不要解释、不要跳出角色、不要说自己是AI；不要逐字复读字卡，要把字卡的意思融进自然口语里；尽量简短，1～3句。';
   resumeMoyuSchedule();
   renderMoyuHome();
     themeSettings = await sGet('theme-settings', themeSettings);
@@ -1443,15 +1431,12 @@ async function init(){
   renderUnreadDots();
   ensureProactiveSchedule();
   checkProactive();
+  setInterval(checkProactive, 20000);
   checkMomentEvents();
-  // 四个后台检查合并成一个 20 秒 tick，减少空转
-  setInterval(()=>{
-    checkProactive();
-    checkMomentEvents();
-    checkMoyuTick();
-    if(typeof checkQuestionnaireReplies === 'function') checkQuestionnaireReplies();
-  }, 20000);
-  checkQuestionnaireReplies(); // 启动时先跑一次
+  setInterval(checkMomentEvents, 20000);
+  setInterval(checkMoyuTick, 20000);
+  checkQuestionnaireReplies();
+  setInterval(checkQuestionnaireReplies, 20000);
   const periodEl = document.getElementById('periodDate');
   if(periodEl) periodEl.valueAsDate = new Date();
 
@@ -2263,121 +2248,6 @@ function formatMsgTime(ts){
     ? d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})
     : d.toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
 }
-
-/* 单条消息 DOM 片段：全量渲染和增量追加共用，避免两套模板 */
-function buildMsgRowHtml(m, botAvatar, myAvatar){
-  const time = formatMsgTime(m.time);
-  if(m.type==='pat' || m.type==='gesture'){
-    return `<div id="msg-${m.id}" style="text-align:center;font-size:11.5px;color:var(--ink-soft);margin:6px 0;">${m.content}</div>`;
-  }
-  const quoteRefHtml = m.quoteOf
-    ? `<div class="quote-ref" onclick="jumpToMessage('${m.quoteOf.id}')">${m.quoteOf.from==='user'?(profile.myName||'我'):chatSettings.companionName}: ${m.quoteOf.preview}</div>` : '';
-  const quoteBtn = `<span class="quote-trigger" onclick="setQuoteTarget('${m.id}')">↩引用</span>`;
-  const avatarHtml = `<div class="msg-avatar">${m.from==='user'?myAvatar:botAvatar}</div>`;
-  let bubbleHtml;
-  if(m.type==='sticker'){
-    const val = m.content.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${m.content}">` : m.content;
-    bubbleHtml = `<div class="msg sticker ${m.from}">${quoteRefHtml}${val}<div class="t" style="text-align:${m.from==='user'?'right':'left'};">${time}${quoteBtn}</div></div>`;
-  } else if(m.type==='image'){
-    bubbleHtml = `<div class="msg image ${m.from}">${quoteRefHtml}<img loading="lazy" decoding="async" class="chat-image" src="${m.content}" onclick="viewChatImage('${m.id}')"><div class="t" style="text-align:${m.from==='user'?'right':'left'};">${time}${(m.from==='user'&&m.read)?' · 已读':''}${quoteBtn}</div></div>`;
-  } else if(m.type==='redpacket'){
-    const revealed = m.from==='user' || m.opened;
-    const tapAttr = revealed ? '' : `onclick="openRedPacket('${m.id}')"`;
-    bubbleHtml = `<div class="msg redpacket ${m.from}" ${tapAttr}>
-      ${quoteRefHtml}
-      <div class="rp-top">🧧 ${m.note||'红包'}</div>
-      ${revealed ? `<div class="rp-amount">¥${Number(m.amount).toFixed(2)}</div>` : `<div class="rp-tap">点击查收</div>`}
-      <div class="t" style="color:rgba(255,255,255,0.75);">${time}${quoteBtn}</div>
-    </div>`;
-  } else if(m.type==='questionnaire'){
-    const opts = (m.options||[]).map((o,i)=>{
-      const chosen = m.answered && m.chosenOption === o;
-      return `<div class="q-option${chosen?' chosen':''}">${chosen?'✓ ':''}${o}</div>`;
-    }).join('');
-    let statusHtml = '';
-    if(m.answered){
-      statusHtml = `<div class="q-meta">已选择 · ${formatMsgTime(m.answerTime||m.time)}</div>`;
-    } else if(m.scheduledReplyAt){
-      const eta = new Date(m.scheduledReplyAt).toLocaleString('zh-CN');
-      statusHtml = `<div class="q-waiting">等待回复中…大概 ${eta}</div>`;
-    }
-    bubbleHtml = `<div class="msg questionnaire ${m.from}">
-      ${quoteRefHtml}
-      <div class="q-title">📋 问卷</div>
-      <div class="q-question">${m.question||''}</div>
-      ${opts}
-      ${statusHtml}
-      <div class="t">${time}${quoteBtn}</div>
-    </div>`;
-  } else if(m.type==='weblink'){
-    const collapsed = !!m.collapsed;
-    const escAttr = (s)=> String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-    bubbleHtml = `<div class="msg ${m.from}" style="padding:0;overflow:hidden;max-width:92%;">
-      ${quoteRefHtml}
-      <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--rule);font-size:12px;">
-        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🔗 ${escAttr(m.content)}</span>
-        <span onclick="event.stopPropagation();window.open('${escAttr(m.content)}','_blank')" style="cursor:pointer;padding:2px 4px;" title="新标签页打开">↗</span>
-        <span onclick="event.stopPropagation();toggleWebLinkCollapse('${m.id}')" style="cursor:pointer;padding:2px 4px;" title="展开/收起">${collapsed ? '▾' : '▴'}</span>
-      </div>
-      ${collapsed ? '' : `<div style="height:420px;background:#000;"><iframe src="${escAttr(m.content)}" style="width:100%;height:100%;border:0;"></iframe></div>`}
-      <div class="t" style="padding:4px 12px 8px;">${time}${(m.from==='user'&&m.read)?' · 已读':''}${quoteBtn}</div>
-    </div>`;
-  } else {
-    const readTag = (m.from==='user' && m.read) ? ' · 已读' : '';
-    const skinClass = m.from==='user' ? 'message message-sent' : 'message message-received';
-    bubbleHtml = `<div class="msg ${m.from} ${skinClass}">${quoteRefHtml}${m.content}<div class="t">${time}${readTag}${quoteBtn}</div></div>`;
-  }
-  return `<div id="msg-${m.id}" class="msg-row ${m.from}">${avatarHtml}${bubbleHtml}</div>`;
-}
-function getChatAvatars(){
-  const botAvatar = profile.avatar && profile.avatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.avatar}">` : (profile.avatar||'🌙');
-  const myAvatar = profile.myAvatar && profile.myAvatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.myAvatar}">` : (profile.myAvatar||'🙂');
-  return { botAvatar, myAvatar };
-}
-/* 增量追加一条消息：不重画整页聊天 */
-function appendChatMessage(m, scroll){
-  if(currentView !== 'chat') return false;
-  const wrap = document.getElementById('chatMsgs');
-  if(!wrap) return false;
-  // 空状态占位清掉
-  const empty = wrap.querySelector('.empty-note');
-  if(empty) empty.remove();
-  // 已存在则不重复插
-  if(document.getElementById('msg-'+m.id)) return true;
-  const { botAvatar, myAvatar } = getChatAvatars();
-  const html = buildMsgRowHtml(m, botAvatar, myAvatar);
-  // 插在 typing 指示器前面
-  const typing = document.getElementById('typingIndicator');
-  if(typing){
-    typing.insertAdjacentHTML('beforebegin', html);
-  } else {
-    wrap.insertAdjacentHTML('beforeend', html);
-  }
-  if(scroll !== false) scrollChatBottom();
-  return true;
-}
-/* 只更新某条消息的「已读」标记，不全量重绘 */
-function markMsgReadInDOM(id){
-  const row = document.getElementById('msg-'+id);
-  if(!row) return;
-  const t = row.querySelector('.t');
-  if(t && !t.textContent.includes('已读')){
-    // 在时间后面插入已读
-    t.innerHTML = t.innerHTML.replace(/(<\/|$)/, (m0, p)=>{
-      // simpler: if text has time, append
-      return m0;
-    });
-    if(!/已读/.test(t.textContent)){
-      const quote = t.querySelector('.quote-trigger');
-      if(quote){
-        quote.insertAdjacentText('beforebegin', ' · 已读');
-      } else {
-        t.appendChild(document.createTextNode(' · 已读'));
-      }
-    }
-  }
-}
-
 function renderChat(preserveScroll, scrollToId){
   const wrap = document.getElementById('chatMsgs');
   document.getElementById('chatCName').textContent = chatSettings.companionName;
@@ -2568,7 +2438,7 @@ async function sendUserMessage(){
   if(quoteTarget){ msg.quoteOf = quoteTarget; clearQuoteTarget(); }
   chatMessages.push(msg);
   await recPut('chatMessages', msg);
-  if(!appendChatMessage(msg)) renderChat();
+  renderChat();
   handleIncomingForBot(text);
 }
 function onChatImageFile(e){
@@ -2580,7 +2450,7 @@ function onChatImageFile(e){
     if(quoteTarget){ msg.quoteOf = quoteTarget; clearQuoteTarget(); }
     chatMessages.push(msg);
     await recPut('chatMessages', msg);
-    if(!appendChatMessage(msg)) renderChat();
+    renderChat();
     handleIncomingForBot('[图片]');
   };
   reader.readAsDataURL(f);
@@ -2592,7 +2462,7 @@ function handleIncomingForBot(userText){
   if(chatSettings.readNoReply && Math.random() < 0.3){
     setTimeout(async ()=>{
       const last = chatMessages[chatMessages.length-1];
-      if(last && last.from==='user'){ last.read = true; await recPut('chatMessages', last); markMsgReadInDOM(last.id); }
+      if(last && last.from==='user'){ last.read = true; await recPut('chatMessages', last); renderChat(); }
     }, 1500 + Math.random()*2500);
     return;
   }
@@ -2611,19 +2481,14 @@ function scheduleAutoReply(userText){
   if(pendingReplyTimer) clearTimeout(pendingReplyTimer);
   pendingReplyTimer = setTimeout(async ()=>{
     showTyping(false);
-    let reply = null;
-    if(aiSettings.enabled && aiSettings.apiUrl && aiSettings.apiKey){
-      reply = await callAiForReply(userText);
-    }
-    if(!reply) reply = pickReplyFor(userText);
+    const reply = pickReplyFor(userText);
     if(reply){
       const newMsg = {id:uid(), from:'bot', time:Date.now(), read:true, ...reply};
       chatMessages.push(newMsg);
       const last = [...chatMessages].reverse().find(m=>m.from==='user' && m.id!==newMsg.id);
       if(last) last.read = true;
       await recPutMany('chatMessages', last ? [newMsg, last] : [newMsg]);
-      if(last) markMsgReadInDOM(last.id);
-      if(!appendChatMessage(newMsg)) renderChat();
+      renderChat();
     }
   }, delayMs);
 }
@@ -2678,72 +2543,6 @@ function getSplicedCardText(){
   return picked.join('\n');
 }
 const REDPACKET_NOTES = ['给你买奶茶','塞进你口袋','抢一个','爱的红包','恭喜发财','小心心'];
-
-/* ---- AI 解读：把字卡 + 最近对话交给外部模型，生成角色第一人称的「自然解读」 ---- */
-function buildAiSystemPrompt(){
-  const name = chatSettings.companionName || '我';
-  return (aiSettings.systemPrompt || '').replace(/\{\{name\}\}/g, name).replace(/\{\{companionName\}\}/g, name);
-}
-async function callAiForReply(userText){
-  if(!aiSettings.enabled || !aiSettings.apiUrl || !aiSettings.apiKey) return null;
-  let cardHints = [];
-  if(typeof spliceCardsEnabled !== 'undefined' && spliceCardsEnabled){
-    const spliced = getSplicedCardText();
-    if(spliced) cardHints = spliced.split('\n').filter(Boolean);
-  }
-  if(cardHints.length === 0){
-    const one = getRandomCardText();
-    if(one) cardHints = [one];
-  }
-  if(cardHints.length === 0) return null;
-
-  const n = Math.max(1, Math.min(30, aiSettings.contextCount || 8));
-  const recent = chatMessages.filter(m => m.type === 'text' || !m.type).slice(-n);
-  const messages = [];
-  messages.push({ role: 'system', content: buildAiSystemPrompt() });
-  recent.forEach(m => {
-    messages.push({
-      role: m.from === 'user' ? 'user' : 'assistant',
-      content: String(m.content || '')
-    });
-  });
-  let userPayload = '请把下面的字卡自然解读成你此刻会说的话。';
-  if(userText) userPayload += '\n对方刚说：' + userText;
-  userPayload += '\n\n【待解读的字卡】\n' + cardHints.map((c,i)=> (i+1)+'. '+c).join('\n');
-  messages.push({ role: 'user', content: userPayload });
-
-  const url = (aiSettings.apiUrl || '').trim().replace(/\/$/, '');
-  const body = {
-    model: (aiSettings.model || 'deepseek-v3').trim(),
-    messages,
-    temperature: 0.85,
-    max_tokens: 300
-  };
-  try{
-    const resp = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + aiSettings.apiKey.trim()
-      },
-      body: JSON.stringify(body)
-    });
-    if(!resp.ok){
-      const errText = await resp.text().catch(()=> '');
-      console.warn('AI解读请求失败', resp.status, errText);
-      return null;
-    }
-    const data = await resp.json();
-    const content = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
-    if(content && String(content).trim()){
-      return { type: 'text', content: String(content).trim() };
-    }
-  }catch(err){
-    console.warn('AI解读网络错误', err);
-  }
-  return null;
-}
-
 function pickReplyFor(userText){
   const roll = Math.random();
   // 小概率随手发个红包，纯粹随机，不针对用户说了什么
@@ -2838,16 +2637,12 @@ function sendProactiveMessage(){
   showTyping(true);
   setTimeout(async ()=>{
     showTyping(false);
-    let reply = null;
-    if(aiSettings.enabled && aiSettings.apiUrl && aiSettings.apiKey){
-      reply = await callAiForReply('');
-    }
-    if(!reply) reply = pickReplyFor(''); // 停顿结束、真要发的这一刻才选字卡，跟手动触发的顺序保持一致
+    const reply = pickReplyFor(''); // 停顿结束、真要发的这一刻才选字卡，跟手动触发的顺序保持一致
     if(!reply) return;
     const newMsg = {id:uid(), from:'bot', time:Date.now(), read:true, ...reply};
     chatMessages.push(newMsg);
     await recPut('chatMessages', newMsg);
-    if(currentView==='chat'){ if(!appendChatMessage(newMsg)) renderChat(); }
+    if(currentView==='chat'){ renderChat(); }
     else{ chatUnread = true; await sSet('chat-unread', true); renderUnreadDots(); }
   }, getReplyDelayMs()); // 打字停顿走传讯设置里的"最快/最慢回复"区间，跟手动触发、平时回复用同一套，不影响 nextMsgAt 的随机调度
 }
@@ -2855,17 +2650,13 @@ function triggerProactiveMessage(){
   showTyping(true);
   setTimeout(async ()=>{
     showTyping(false);
-    let reply = null;
-    if(aiSettings.enabled && aiSettings.apiUrl && aiSettings.apiKey){
-      reply = await callAiForReply('');
-    }
-    if(!reply) reply = pickReplyFor('');
+    const reply = pickReplyFor('');
     if(reply){
       const newMsg = { id:uid(), from:'bot', time:Date.now(), read:true, ...reply};
       chatMessages.push(newMsg);
       await recPut('chatMessages', newMsg);
       if(currentView==='chat'){ 
-        if(!appendChatMessage(newMsg)) renderChat(); 
+        renderChat(); 
       } else {
         chatUnread = true; 
         await sSet('chat-unread', true); 
@@ -2914,7 +2705,7 @@ async function sendWebLinkToChat(){
   const msg = { id:uid(), from:'user', type:'weblink', content:raw, time:Date.now(), collapsed:false };
   chatMessages.push(msg);
   await recPut('chatMessages', msg);
-  if(!appendChatMessage(msg)) renderChat();
+  renderChat();
   handleIncomingForBot('');
 }
 function getUrlHost(url){
@@ -2953,7 +2744,7 @@ async function sendGesture(key){
   const gestureMsg = { id:uid(), from:'system', type:'gesture', content:`你${action.verb} ${chatSettings.companionName}`, time:Date.now() };
   chatMessages.push(gestureMsg);
   await recPut('chatMessages', gestureMsg);
-  if(!appendChatMessage(gestureMsg)) renderChat();
+  renderChat();
   // 统一走已读不回 + 传讯设置里的回复延迟区间，跟普通消息回复用同一套逻辑
   handleIncomingForBot('');
 }
@@ -3169,33 +2960,6 @@ function openChatSettings(){
       <div class="btn outline" onclick="document.getElementById('stickerFileInput').click()">🖼 批量上传图片贴纸</div>
     </div>
     <input type="file" id="stickerFileInput" accept="image/*" multiple class="hidden" onchange="onStickerFile(event)">
-
-    <div class="box-title" style="margin-top:18px;">🤖 AI 解读</div>
-    <div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;">开启后，会先抽字卡，再调用你配置的模型把字卡「自然解读」成角色第一人称的话；失败时自动回退到普通字卡。</div>
-    <div class="switch-row">
-      <span>开启 AI 解读</span>
-      <div class="switch ${aiSettings.enabled?'on':''}" id="csAiEnabled" onclick="this.classList.toggle('on')"><div class="dot"></div></div>
-    </div>
-    <label class="field">API 地址</label>
-    <input type="text" id="csAiUrl" value="${(aiSettings.apiUrl||'').replace(/"/g,'&quot;')}" placeholder="https://…/v1/chat/completions">
-    <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">需支持浏览器跨域(CORS)，兼容 OpenAI / DeepSeek 官方接口格式</div>
-    <label class="field">API Key</label>
-    <div style="display:flex;gap:6px;align-items:center;">
-      <input type="password" id="csAiKey" value="${(aiSettings.apiKey||'').replace(/"/g,'&quot;')}" placeholder="sk-…" style="flex:1;">
-      <span class="icon-btn" style="width:36px;height:36px;flex-shrink:0;" onclick="(function(b){const i=document.getElementById('csAiKey');if(!i)return;if(i.type==='password'){i.type='text';b.textContent='🙈';}else{i.type='password';b.textContent='👁';}})(this)">👁</span>
-    </div>
-    <label class="field">模型名称</label>
-    <input type="text" id="csAiModel" value="${(aiSettings.model||'').replace(/"/g,'&quot;')}" placeholder="例如 deepseek-v3 / qwen-plus">
-    <label class="field">上下文条数 <span style="color:var(--ink-soft);font-weight:400;">（你自己定，AI 会读取最近这么多条消息）</span></label>
-    <input type="number" id="csAiContext" min="1" max="30" value="${aiSettings.contextCount||8}">
-    <label class="field">系统提示词（高级 · 可改人设，支持 {{name}} 占位）</label>
-    <textarea id="csAiPrompt" style="min-height:90px;">${(aiSettings.systemPrompt||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/`/g,'&#96;')}</textarea>
-    <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">默认是「自然解读字卡 + 角色第一人称」。你可以自由改写语气、人设、禁忌等。</div>
-    <div class="btn-row" style="margin-top:10px;">
-      <div class="btn outline" onclick="testAiConnection()">🔌 测试连接</div>
-    </div>
-    <div id="csAiTestResult" style="font-size:12px;margin-top:6px;color:var(--ink-soft);"></div>
-
     <div class="btn-row" style="margin-top:16px;">
       <div class="btn" onclick="saveChatSettings()">保存设置</div>
     </div>
@@ -3278,50 +3042,9 @@ async function saveChatSettings(){
     moyuState.nextAt = null;
   }
   await sSet('moyu-state', moyuState);
-  const aiEn = document.getElementById('csAiEnabled');
-  if(aiEn){
-    aiSettings.enabled = aiEn.classList.contains('on');
-    aiSettings.apiUrl = (document.getElementById('csAiUrl').value || '').trim();
-    aiSettings.apiKey = (document.getElementById('csAiKey').value || '').trim();
-    aiSettings.model = (document.getElementById('csAiModel').value || '').trim() || 'deepseek-v3';
-    aiSettings.contextCount = Math.max(1, Math.min(30, parseInt(document.getElementById('csAiContext').value, 10) || 8));
-    aiSettings.systemPrompt = (document.getElementById('csAiPrompt').value || '').trim();
-    await sSet('ai-settings', aiSettings);
-  }
   renderChat(); renderHomeProfile(); renderMoyuHome();
   closeOverlay();
 }
-async function testAiConnection(){
-  const resultEl = document.getElementById('csAiTestResult');
-  if(resultEl) resultEl.textContent = '测试中…';
-  const tmp = {
-    enabled: true,
-    apiUrl: (document.getElementById('csAiUrl')||{}).value || '',
-    apiKey: (document.getElementById('csAiKey')||{}).value || '',
-    model: (document.getElementById('csAiModel')||{}).value || 'deepseek-v3',
-    contextCount: 2,
-    systemPrompt: (document.getElementById('csAiPrompt')||{}).value || aiSettings.systemPrompt
-  };
-  if(!tmp.apiUrl || !tmp.apiKey){
-    if(resultEl) resultEl.textContent = '请先填写 API 地址和 Key';
-    return;
-  }
-  const oldCfg = Object.assign({}, aiSettings);
-  Object.assign(aiSettings, tmp);
-  try{
-    const reply = await callAiForReply('（测试）');
-    if(reply && reply.content){
-      if(resultEl) resultEl.innerHTML = '<span style="color:var(--rouge);">✓ 连接成功</span><br><span style="font-size:12px;">解读预览：' + reply.content.slice(0,80).replace(/</g,'&lt;') + (reply.content.length>80?'…':'') + '</span>';
-    } else {
-      if(resultEl) resultEl.textContent = '请求已发出，但未拿到有效回复，请检查模型名 / 接口是否兼容 OpenAI 格式，或字卡库是否为空';
-    }
-  }catch(e){
-    if(resultEl) resultEl.textContent = '测试失败：' + (e.message || e);
-  } finally {
-    Object.assign(aiSettings, oldCfg);
-  }
-}
-
 function onChatBgFile(e){
   const f = e.target.files[0]; if(!f) return;
   const reader = new FileReader();
@@ -3406,7 +3129,7 @@ async function sendStickerMsg(value){
   if(quoteTarget){ msg.quoteOf = quoteTarget; clearQuoteTarget(); }
   chatMessages.push(msg);
   await recPut('chatMessages', msg);
-  if(!appendChatMessage(msg)) renderChat(); closeOverlay();
+  renderChat(); closeOverlay();
   handleIncomingForBot('[表情]');
 }
 
@@ -3429,7 +3152,7 @@ async function sendRedPacket(){
   if(quoteTarget){ msg.quoteOf = quoteTarget; clearQuoteTarget(); }
   chatMessages.push(msg);
   await recPut('chatMessages', msg);
-  if(!appendChatMessage(msg)) renderChat(); closeOverlay();
+  renderChat(); closeOverlay();
   handleIncomingForBot('[红包]');
 }
 
@@ -3498,7 +3221,7 @@ async function sendQuestionnaire(){
   if(quoteTarget){ msg.quoteOf = quoteTarget; clearQuoteTarget(); }
   chatMessages.push(msg);
   await recPut('chatMessages', msg);
-  if(!appendChatMessage(msg)) renderChat();
+  renderChat();
   closeOverlay();
 }
 async function checkQuestionnaireReplies(){
@@ -3530,7 +3253,6 @@ async function checkQuestionnaireReplies(){
     changed = true;
   }
   if(changed){
-    // 问卷卡片状态也变了，这里全量刷一次更稳妥（很少触发）
     if(currentView === 'chat'){ renderChat(); }
     else { chatUnread = true; await sSet('chat-unread', true); renderUnreadDots(); }
   }
@@ -3832,29 +3554,7 @@ async function toggleMomentLike(id){
   const post = momentsPosts.find(p=>p.id===id); if(!post) return;
   post.likedByUser = !post.likedByUser;
   await recPut('momentsPosts', post);
-  // 只改这一条的赞按钮和赞列表，不全量重画朋友圈
-  const btn = document.querySelector(`.moment-like-btn[onclick*="${id}"]`);
-  if(btn){
-    btn.classList.toggle('active', !!post.likedByUser);
-    btn.textContent = (post.likedByUser ? '❤️' : '🤍') + ' 赞';
-    const body = btn.closest('.moment-body');
-    if(body){
-      let likers = body.querySelector('.moment-likes-user');
-      if(post.likedByUser){
-        if(!likers){
-          likers = document.createElement('div');
-          likers.className = 'moment-likes moment-likes-user';
-          likers.style.marginTop = '6px';
-          btn.parentElement.insertAdjacentElement('afterend', likers);
-        }
-        likers.textContent = '❤️ ' + (profile.myName || '我');
-      } else if(likers){
-        likers.remove();
-      }
-    }
-  } else if(currentView==='moments'){
-    renderMoments();
-  }
+  renderMoments();
 }
 /* ---- 评论：我可以评论任何一条，TA 要不要回是纯随机的 ---- */
 async function addMomentComment(id){
@@ -3893,7 +3593,7 @@ function renderMoments(){
     }
 
     const likeBtn = `<span class="moment-like-btn ${p.likedByUser?'active':''}" onclick="toggleMomentLike('${p.id}')">${p.likedByUser?'❤️':'🤍'} 赞</span>`;
-    const likersLine = p.likedByUser ? `<div class="moment-likes moment-likes-user" style="margin-top:6px;">❤️ ${myName}</div>` : '';
+    const likersLine = p.likedByUser ? `<div class="moment-likes" style="margin-top:6px;">❤️ ${myName}</div>` : '';
 
     const thread = (p.comments && p.comments.length)
       ? `<div class="moment-thread">${p.comments.map(c=>`<div class="moment-comment-line"><b style="color:${c.author==='user'?'var(--ink)':'var(--rouge)'};">${c.author==='user'?myName:chatSettings.companionName}：</b>${c.text}</div>`).join('')}</div>`
@@ -4226,7 +3926,7 @@ async function exportBackup(){
   const data = {
     profile, chatSettings, chatMessages: fullChat, cardsData, ledgerEntries, periodEntries,
     diaryEntries, momentsPosts: fullMoments, letters, inboxLetters, callLogs, themeSettings, proactiveState,
-    lifePhotos: fullPhotos, statusPool, todayStatus, todayStatusHistory, customBubbleCSS, moyuState, proactiveMsgSettings, momentInteractSettings, spliceCardsEnabled, aiSettings,
+    lifePhotos: fullPhotos, statusPool, todayStatus, todayStatusHistory, customBubbleCSS, moyuState, proactiveMsgSettings, momentInteractSettings, spliceCardsEnabled,
     exportedAt: Date.now()
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
@@ -4269,7 +3969,6 @@ function onImportBackupFile(e){
     proactiveMsgSettings = data.proactiveMsgSettings || proactiveMsgSettings;
     momentInteractSettings = data.momentInteractSettings || momentInteractSettings;
     if(typeof data.spliceCardsEnabled === 'boolean') spliceCardsEnabled = data.spliceCardsEnabled;
-    if(data.aiSettings && typeof data.aiSettings === 'object') aiSettings = Object.assign(aiSettings, data.aiSettings);
     await sSet('profile', profile);
     await sSet('chat-settings', chatSettings);
     await sSet('cards-data', cardsData);
@@ -4289,7 +3988,6 @@ function onImportBackupFile(e){
     await sSet('proactive-msg-settings', proactiveMsgSettings);
     await sSet('moment-interact-settings', momentInteractSettings);
     await sSet('splice-cards-enabled', spliceCardsEnabled);
-    await sSet('ai-settings', aiSettings);
     // 恢复到各自专用的逐条记录表：先清空旧的，再把备份里的全部记录整体写进去
     await recClear('chatMessages'); await recPutMany('chatMessages', importedChat.map((m,i)=> m.time?m:{...m,time:Date.now()-(importedChat.length-i)}));
     await recClear('momentsPosts'); await recPutMany('momentsPosts', importedMoments.map((p,i)=> p.time?p:{...p,time:Date.now()-i}));
