@@ -526,6 +526,238 @@
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
 }
+
+/* ============================================================
+   HOME ONLY — visual refresh
+   只作用于 #view-home，不修改其他页面/功能
+   ============================================================ */
+#view-home .topbar{margin-bottom:18px;padding:2px 2px 0;}
+#view-home .stamp-tag{letter-spacing:3px;font-size:10px;padding:5px 9px;border:1px dashed var(--ink);background:rgba(255,255,255,.62);}
+#view-home .hero-name{font-size:17px;letter-spacing:3px;}
+#view-home .icon-btn{width:34px;height:34px;font-size:15px;background:rgba(255,255,255,.55);}
+
+#view-home .anniv-card{
+  margin-top:4px;padding:20px 14px 17px;border-width:1px;
+  background:rgba(255,255,255,.72);box-shadow:0 8px 22px rgba(42,36,31,.07);
+}
+#view-home .anniv-card::before{background:rgba(255,255,255,.9);letter-spacing:3px;}
+#view-home .anniv-avatars{gap:25px;}
+#view-home .anniv-avatar{width:62px;height:62px;}
+#view-home .anniv-heart{font-size:15px;}
+#view-home .anniv-text{margin-top:13px;font-size:13px;letter-spacing:2px;}
+#view-home .anniv-text b{font-size:21px;}
+
+#view-home .diary-divider-line{margin:20px 0;border-top:1px dashed rgba(42,36,31,.18);}
+#view-home .polaroid-hero{margin-top:10px;}
+#view-home .polaroid-hero .polaroid.large{
+  width:min(78vw,270px);padding:11px 11px 34px;
+  background:#fff;box-shadow:0 12px 28px rgba(42,36,31,.17);transform:rotate(-2deg);
+}
+#view-home .polaroid-hero .polaroid.large .ph{border-color:rgba(42,36,31,.16);}
+#view-home .polaroid-hero .polaroid.large .cap{font-size:14px;letter-spacing:1px;}
+#view-home .hero-caption{
+  margin-top:17px;font-size:15px;letter-spacing:1px;line-height:1.8;
+  max-width:340px;border-bottom:1px dashed rgba(42,36,31,.18);padding-bottom:4px;
+}
+
+#view-home .love-row{
+  padding:2px 0;font-size:14px;letter-spacing:3px;
+}
+#view-home .love-row .love-word{font-size:14px;}
+#view-home .love-row .bond-pct{font-size:22px;letter-spacing:2px;}
+
+/* 首页实时状态区：一眼看到“今天怎么样”和“摸鱼小记” */
+#view-home .home-live-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:5px 0 7px;
+}
+#view-home .home-live-card{
+  position:relative;min-height:82px;padding:11px 12px 10px;
+  border:1px solid rgba(42,36,31,.16);background:rgba(255,255,255,.72);
+  box-shadow:0 5px 14px rgba(42,36,31,.06);cursor:pointer;overflow:hidden;
+}
+#view-home .home-live-card::after{
+  content:'';position:absolute;right:-18px;bottom:-22px;width:52px;height:52px;
+  border:1px solid rgba(42,36,31,.08);border-radius:50%;
+}
+#view-home .home-live-title{display:flex;align-items:center;gap:7px;font-family:var(--font-secondary,'Noto Serif SC',serif);font-size:13px;font-weight:700;margin-bottom:8px;letter-spacing:1px;}
+#view-home .home-live-title .live-icon{width:18px;height:18px;flex:0 0 18px;}
+#view-home .home-live-title .live-icon svg{width:18px;height:18px;}
+#view-home .home-live-status-pill{min-height:25px;display:flex;align-items:center;justify-content:center;padding:4px 10px;border:1px solid rgba(42,36,31,.12);border-radius:999px;background:rgba(248,244,239,.72);font-size:11.5px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#view-home .home-live-note{font-size:11.5px;line-height:1.55;color:var(--ink-soft);min-height:25px;padding:4px 3px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+#view-home .home-live-card.status-card{background:rgba(255,255,255,.72);}
+#view-home .home-live-card.moyu-card{background:rgba(255,255,255,.72);}
+#view-home .home-live-card:active{transform:translateY(1px);background:var(--blush);}
+
+#view-home .home-section-label{
+  display:flex;align-items:center;justify-content:space-between;margin:4px 1px 8px;
+  font-family:var(--font-secondary,'Noto Serif SC',serif);font-weight:700;font-size:12px;letter-spacing:3px;color:var(--ink-soft);
+}
+#view-home .home-section-label span:last-child{font-family:inherit;font-size:9px;letter-spacing:2px;opacity:.65;}
+
+#view-home .search-bar{
+  margin-top:0;padding:9px 11px;border:1px solid rgba(42,36,31,.72);
+  background:rgba(255,255,255,.58);box-shadow:none;
+}
+#view-home .search-bar input{font-size:12.5px;}
+#view-home .go-btn{padding:5px 12px;font-size:11px;background:rgba(255,255,255,.45);}
+
+#view-home .memory-list{
+  border:1px solid rgba(42,36,31,.72);background:rgba(255,255,255,.52);
+}
+#view-home .diary-list-item{padding:11px 12px;gap:9px;font-size:12.5px;}
+#view-home .dli-icon{font-size:14px;width:20px;}
+#view-home .dli-arrow{font-size:15px;}
+#view-home .dli-label b{font-weight:500;color:var(--ink-soft);}
+#view-home .diary-divider{margin:0 12px;border-top:1px dotted rgba(42,36,31,.16);}
+
+#view-home .grid8{
+  grid-template-columns:repeat(3,1fr);gap:16px 8px;margin-top:10px;
+  padding:3px 2px 0;
+}
+#view-home .fn-icon{
+  width:52px;height:52px;border-radius:16px;font-size:20px;background:rgba(255,255,255,.55);
+  box-shadow:0 4px 12px rgba(42,36,31,.05);border-color:rgba(42,36,31,.72);
+}
+#view-home .fn-label{font-size:10.5px;letter-spacing:1.5px;}
+
+@media (max-width:360px){
+  #view-home .home-live-grid{gap:8px;}
+  #view-home .home-live-card{padding:10px 10px;min-height:72px;}
+  #view-home .polaroid-hero .polaroid.large{width:230px;}
+}
+
+
+/* ============================================================
+   HOME PHOTO MATCH — only #view-home
+   按用户提供的参考图进行首页视觉重做；其他页面不受影响。
+   ============================================================ */
+#view-home{padding-bottom:18px;}
+#view-home .topbar{margin:0 2px 14px;padding:0;min-height:48px;}
+#view-home .home-diary-mark{font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:3px;line-height:1;display:flex;flex-direction:column;color:var(--ink);}
+#view-home .home-diary-mark small{font-family:'Ma Shan Zheng',cursive;font-size:11px;letter-spacing:2px;color:var(--ink-soft);margin-top:4px;}
+#view-home .hero-name{left:auto;right:38px;top:8px;transform:none;font-size:11px;letter-spacing:2px;font-family:Georgia,'Times New Roman',serif!important;font-weight:500!important;}
+#view-home .hero-name::after{content:'Only for you.';display:block;font-family:'Ma Shan Zheng',cursive;font-size:9px;letter-spacing:1px;color:var(--ink-soft);margin-top:2px;}
+#view-home .home-top-action{width:31px;height:31px;border:0;background:transparent;box-shadow:none;border-radius:0;font-size:19px;margin-top:-2px;}
+
+#view-home .anniv-card{margin:0 0 8px;padding:30px 14px 18px;border:1px solid rgba(42,36,31,.12);border-radius:16px;background:rgba(255,255,255,.78);box-shadow:0 9px 28px rgba(42,36,31,.07);}
+#view-home .anniv-card::before{display:none;}
+#view-home .home-together-label{font-family:Georgia,'Times New Roman',serif;font-size:11px;letter-spacing:3px;color:var(--ink-soft);margin-bottom:12px;}
+#view-home .anniv-avatars{gap:30px;align-items:center;}
+#view-home .anniv-slot{gap:7px;}
+#view-home .anniv-avatar{width:82px;height:82px;border:2px solid #fff;box-shadow:0 0 0 1px rgba(42,36,31,.16);}
+#view-home .anniv-heart{display:none;}
+#view-home .anniv-cross{font-family:Georgia,serif;font-size:26px;font-weight:300;color:rgba(42,36,31,.48);margin-top:-12px;}
+#view-home .anniv-name{font-size:13px;border:0;padding:0;font-weight:500;}
+#view-home .anniv-text{margin-top:18px;padding-top:12px;border-top:1px dotted rgba(42,36,31,.14);width:100%;text-align:center;font-size:14px;letter-spacing:2px;}
+#view-home .anniv-text b{font-size:21px;font-weight:500;}
+
+#view-home .polaroid-hero{margin:0 -2px;padding-top:0;}
+#view-home .polaroid-hero .polaroid.large{width:min(79vw,300px);padding:11px 11px 38px;background:#fff;border:1px solid rgba(42,36,31,.14);box-shadow:0 12px 26px rgba(42,36,31,.14);transform:rotate(-2deg);}
+#view-home .polaroid-hero .polaroid.large .cap{bottom:10px;font-size:15px;letter-spacing:1px;}
+#view-home .polaroid-hero .polaroid.large .ph{border-color:rgba(42,36,31,.1);}
+#view-home .hero-caption{margin-top:18px;max-width:330px;padding:0 12px 12px;border-bottom:0;font-family:'Noto Serif SC',serif;font-size:15px;line-height:1.7;letter-spacing:1px;color:var(--ink);}
+#view-home .hero-caption::before{content:'“';color:rgba(42,36,31,.16);font-size:27px;vertical-align:-5px;margin-right:5px;}
+#view-home .hero-caption::after{content:'”';color:rgba(42,36,31,.16);font-size:27px;vertical-align:-5px;margin-left:5px;}
+
+#view-home .love-meter{margin:2px 24px 17px;text-align:center;}
+#view-home .love-meter-title{font-family:Georgia,'Times New Roman',serif;font-size:10px;letter-spacing:4px;color:var(--ink-soft);}
+#view-home .love-meter-number{font-family:Georgia,'Times New Roman',serif;font-size:31px;letter-spacing:4px;line-height:1.2;color:var(--ink);margin-top:3px;}
+#view-home .love-meter-line{position:relative;height:13px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:center;}
+#view-home .love-meter-line::before{content:'';position:absolute;left:0;right:0;top:6px;border-top:1px solid rgba(42,36,31,.35);}
+#view-home .love-meter-line span{position:absolute;left:0;top:4px;width:50%;border-top:1px solid var(--rouge);}
+#view-home .love-meter-line i{position:relative;z-index:1;background:var(--paper);padding:0 6px;color:var(--rouge);font-style:normal;font-size:12px;}
+#view-home .love-meter-sub{font-family:Georgia,'Times New Roman',serif;font-size:7px;letter-spacing:5px;color:rgba(42,36,31,.4);margin-top:-1px;}
+
+#view-home .home-live-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px;}
+#view-home .home-live-card{min-height:78px;height:auto;padding:12px 12px 10px;border:1px solid rgba(42,36,31,.10);border-radius:2px;background:rgba(255,255,255,.72)!important;box-shadow:0 4px 12px rgba(42,36,31,.06);overflow:hidden;}
+#view-home .home-live-card::after{right:-18px;bottom:-20px;width:48px;height:48px;border-color:rgba(42,36,31,.08);}
+#view-home .home-live-title{font-family:'Noto Serif SC',serif;font-size:12.5px;font-weight:700;letter-spacing:1px;margin-bottom:8px;}
+#view-home .home-live-title span{font-size:12px;color:var(--ink-soft);margin-right:4px;}
+#view-home .home-live-status-pill{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(42,36,31,.12);border-radius:20px;padding:4px 10px;font-size:11px;color:var(--ink-soft);margin-bottom:0;background:rgba(255,255,255,.45);max-width:100%;}
+#view-home .home-live-quote{font-family:'Noto Serif SC',serif;font-size:11px;line-height:1.6;color:var(--ink-soft);}
+#view-home .home-live-note{font-family:'Noto Serif SC',serif;font-size:11.5px;line-height:1.5;color:var(--ink-soft);margin:0;min-height:22px;display:flex;align-items:center;}
+#view-home #todayStatusText:empty{display:none;}
+#view-home .home-live-status-pill:has(#todayStatusText:empty){visibility:hidden;}
+#view-home .home-live-time{position:absolute;left:13px;bottom:10px;font-size:8px;letter-spacing:.8px;color:rgba(42,36,31,.42);}
+#view-home .home-live-arrow,#view-home .home-live-kicker{display:none;}
+
+#view-home .home-section-label{margin:0 3px 8px;padding-bottom:5px;border-bottom:1px solid rgba(42,36,31,.13);font-family:Georgia,'Times New Roman',serif;font-size:14px;letter-spacing:2px;color:var(--ink);}
+#view-home .home-section-label span:last-child{font-family:Georgia,'Times New Roman',serif;font-size:7px;letter-spacing:2px;opacity:.45;}
+#view-home .search-bar{margin:0 0 10px;padding:8px 11px;border:1px solid rgba(42,36,31,.12);border-radius:2px;background:rgba(255,255,255,.48);box-shadow:none;}
+#view-home .search-bar input{font-size:11px;}
+#view-home .go-btn{padding:4px 10px;border:1px solid rgba(42,36,31,.12);font-size:12px;background:rgba(255,255,255,.38);}
+
+#view-home .memory-grid{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid rgba(42,36,31,.08);background:rgba(255,255,255,.54);box-shadow:0 4px 16px rgba(42,36,31,.05);margin-bottom:17px;}
+#view-home .memory-grid-item{min-width:0;text-align:center;padding:13px 5px 12px;border-right:1px dotted rgba(42,36,31,.15);cursor:pointer;}
+#view-home .memory-grid-item:last-child{border-right:0;}
+#view-home .memory-grid-item:active{background:rgba(255,255,255,.75);}
+#view-home .memory-icon{line-height:1;margin-bottom:8px;color:var(--ink);}
+#view-home .memory-grid-item b{display:block;font-family:'Noto Serif SC',serif;font-size:10px;font-weight:600;white-space:nowrap;}
+#view-home .memory-grid-item small{display:block;font-size:7px;color:var(--ink-soft);margin-top:4px;white-space:nowrap;transform:scale(.9);}
+
+#view-home .daily-label{margin-top:0;}
+#view-home .grid8{grid-template-columns:repeat(4,1fr);gap:0;margin:0 0 4px;padding:0;border:1px solid rgba(42,36,31,.08);background:rgba(255,255,255,.48);}
+#view-home .fn-item{padding:13px 4px 11px;gap:7px;border-right:1px dotted rgba(42,36,31,.14);border-bottom:1px dotted rgba(42,36,31,.14);}
+#view-home .fn-item:nth-child(4),#view-home .fn-item:nth-child(6){border-right:0;}
+#view-home .fn-item:nth-child(5),#view-home .fn-item:nth-child(6){border-bottom:0;}
+#view-home .fn-icon{width:35px;height:35px;border:0;border-radius:0;background:transparent;box-shadow:none;font-family:Georgia,serif;font-size:22px;color:var(--ink);}
+#view-home .fn-label{font-size:9px;letter-spacing:1px;}
+#view-home .diary-divider-line{display:none;}
+
+@media (max-width:380px){
+  #view-home .anniv-avatar{width:74px;height:74px;}
+  #view-home .anniv-avatars{gap:23px;}
+  #view-home .home-live-card{min-height:74px;padding-left:11px;padding-right:11px;}
+  #view-home .memory-grid-item small{font-size:6.5px;}
+}
+
+
+/* 首页图标统一：参考图的细线手账图标，不使用 emoji / 字符占位符 */
+#view-home .home-svg-icon{display:inline-flex;align-items:center;justify-content:center;line-height:0;color:var(--ink);}
+#view-home .home-svg-icon svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round;}
+#view-home .home-live-title .home-svg-icon{width:22px;height:22px;vertical-align:middle;margin-right:5px;color:var(--ink-soft);}
+#view-home .memory-icon.home-svg-icon{width:32px;height:32px;margin:0 auto 8px;}
+#view-home .memory-grid-item small{display:none!important;}
+#view-home .fn-icon.home-svg-icon{width:35px;height:35px;position:relative;}
+#view-home .fn-icon.home-svg-icon svg{width:25px;height:25px;}
+#view-home .home-top-action.home-svg-icon{width:31px;height:31px;}
+#view-home .home-top-action.home-svg-icon svg{width:19px;height:19px;}
+#view-home .home-search-icon{width:18px;height:18px;flex:0 0 18px;color:var(--ink-soft);}
+#view-home .home-search-icon svg{width:18px;height:18px;}
+#view-home .go-btn.home-svg-icon{width:34px;height:30px;padding:0;}
+#view-home .go-btn.home-svg-icon svg{width:17px;height:17px;}
+#view-home .home-live-status-pill:has(#todayStatusText:empty){display:none;}
+#view-home .home-live-note:empty{display:none;}
+#view-home .hero-caption:empty{display:none;}
+#view-home .love-meter-number:empty{display:none;}
+#view-home .polaroid-hero .polaroid.large .ph:empty{min-height:0;border:0;}
+
+
+/* 参考图：空状态也显示占位文案，不再整块隐藏 */
+#view-home .home-live-status-pill:has(#todayStatusText:empty){display:flex !important; visibility:visible !important;}
+#view-home .home-live-note:empty{display:block !important;}
+#view-home #todayStatusText:empty{display:inline !important;}
+
+/* 摸鱼卡片右上角回形针装饰（贴近参考图） */
+#view-home .home-live-card.moyu-card::before{
+  content:'';
+  position:absolute; top:8px; right:10px; width:14px; height:22px;
+  border:1.6px solid rgba(42,36,31,.28); border-radius:8px;
+  transform:rotate(18deg); pointer-events:none; z-index:2;
+  box-shadow: inset 0 0 0 1.5px transparent;
+}
+#view-home .home-live-card.moyu-card::after{
+  content:'';
+  position:absolute; top:14px; right:14px; width:6px; height:10px;
+  border:1.4px solid rgba(42,36,31,.22); border-radius:4px;
+  transform:rotate(18deg); pointer-events:none; z-index:2;
+}
+
+/* 右上角来信红点 */
+#view-home .home-top-action .dot-badge{
+  top:0; right:0; width:8px; height:8px;
+}
+
 </style>
 </head>
 <body>
@@ -553,22 +785,25 @@
   <!-- ============ HOME ============ -->
   <section id="view-home" class="view">
     <div class="topbar">
-      <div class="tb-left"><span class="stamp-tag">DIARY</span></div>
+      <div class="tb-left">
+        <span class="home-diary-mark">DIARY<small>Love diary</small></span>
+      </div>
       <div class="hero-name" id="pNameHero">陆沉</div>
-      <div class="icon-btn" onclick="go('settings')">⚙️</div>
+      <div class="home-top-action icon-btn home-svg-icon" onclick="go('settings')" title="设置"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
     </div>
 
     <div class="anniv-card" id="annivCardEl">
-      <div style="position:absolute;top:6px;right:8px;font-size:12px;cursor:pointer;opacity:.6;" onclick="editAnnivCardBg()" title="修改卡片背景">🎨</div>
+      <div style="position:absolute;top:7px;right:9px;font-size:10px;cursor:pointer;opacity:.28;" onclick="editAnnivCardBg()" title="修改卡片背景">✦</div>
       <div class="anniv-row">
+        <div class="home-together-label">♡ together ♡</div>
         <div class="anniv-avatars">
           <div class="anniv-slot">
-            <div class="anniv-avatar theirs" id="annivTheirAvatar" onclick="document.getElementById('avatarFileInput').click()">🌙</div>
+            <div class="anniv-avatar theirs" id="annivTheirAvatar" onclick="document.getElementById('avatarFileInput').click()"></div>
             <div class="anniv-name" id="annivTheirName" onclick="editTheirName()">陆沉</div>
           </div>
-          <div class="anniv-heart">❤</div>
+          <div class="anniv-cross">×</div>
           <div class="anniv-slot">
-            <div class="anniv-avatar mine" id="annivMyAvatar" onclick="document.getElementById('myAvatarFileInput').click()">🙂</div>
+            <div class="anniv-avatar mine" id="annivMyAvatar" onclick="document.getElementById('myAvatarFileInput').click()"></div>
             <div class="anniv-name" id="annivMyName" onclick="editMyName()">我</div>
           </div>
         </div>
@@ -576,64 +811,60 @@
       </div>
     </div>
 
-    <div class="diary-divider-line"></div>
-
     <div class="polaroid-hero">
       <div class="polaroid large">
-        <div class="ph" id="polaroidPh" onclick="document.getElementById('photoInput').click()">点击上传</div>
+        <div class="ph" id="polaroidPh" onclick="document.getElementById('photoInput').click()"></div>
         <div class="cap">My love.</div>
       </div>
       <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="onPhotoUpload(event)">
-      <div class="hero-caption" id="polaroidCaption" onclick="editPolaroidCaption()">「跌入你的宇宙。」</div>
+      <div class="hero-caption" id="polaroidCaption" onclick="editPolaroidCaption()"></div>
     </div>
 
-    <div class="diary-divider-line"></div>
+    <div class="love-meter">
+      <div class="love-meter-title">♡ &nbsp; LOVE METER &nbsp; ♡</div>
+      <div class="love-meter-number" id="bondPctText"></div>
+      <div class="love-meter-line"><span></span><i>♥</i></div>
+      <div class="love-meter-sub">F O R E V E R &nbsp; Y O U R S</div>
+    </div>
 
-    <div class="love-row">❤️ <span class="love-word">LOVE</span> <span class="bond-pct" id="bondPctText">100%</span></div>
+    <div class="home-live-grid">
+      <div class="home-live-card status-card" onclick="openTodayStatusPanel()">
+        <div class="home-live-title"><span class="home-svg-icon live-icon">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H4z"/><path d="M7 8h10M7 12h6M8 19h8M10 16v3M14 16v3"/></svg>
+</span>今日状态</div>
+        <div class="home-live-status-pill"><span id="todayStatusText"></span></div>
+      </div>
+      <div class="home-live-card moyu-card" onclick="openMoyuNotePanel()">
+        <div class="home-live-title"><span class="home-svg-icon live-icon">
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12c2.5-4 6-6 9-6s6.5 2 9 6c-2.5 4-6 6-9 6s-6.5-2-9-6Z"/><path d="M12 6v12M7 9l-2-2M17 9l2-2"/></svg>
+</span>摸鱼小记</div>
+        <div class="home-live-note" id="moyuLatestText"></div>
+      </div>
+    </div>
 
-    <div class="diary-divider-line"></div>
-
-    <div class="memory-label">🎞 memory</div>
+    <div class="home-section-label"><span>MEMORY</span></div>
     <div class="search-bar">
-      <span>🔍</span>
+      <span class="home-search-icon home-svg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></span>
       <input type="text" id="searchInput" placeholder="搜索聊天回忆…" onkeydown="if(event.key==='Enter')doSearch()">
-      <div class="go-btn" onclick="doSearch()">GO</div>
+      <div class="go-btn home-svg-icon" onclick="doSearch()"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></div>
     </div>
     <div class="search-results" id="searchResults"></div>
 
-    <div class="diary-divider-line"></div>
-
-    <div class="diary-list">
-      <div class="diary-list-item" onclick="go('lifephotos')">
-        <span class="dli-icon">📎</span><span class="dli-label">生活照片</span><span class="dli-arrow">›</span>
-      </div>
-      <div class="diary-divider"></div>
-      <div class="diary-list-item" onclick="openTodayStatusPanel()">
-        <span class="dli-icon">🎬</span><span class="dli-label">今日状态：<b id="todayStatusText">暂无</b></span><span class="dli-arrow">›</span>
-      </div>
-      <div class="diary-divider"></div>
-      <div class="diary-list-item" onclick="go('moments')">
-        <span class="dli-icon">📷<span id="momentsDot" class="dot-badge hidden"></span></span><span class="dli-label">朋友圈</span><span class="dli-arrow">›</span>
-      </div>
-      <div class="diary-divider"></div>
-      <div class="diary-list-item" onclick="go('cards')">
-        <span class="dli-icon">🎴</span><span class="dli-label">字卡</span><span class="dli-arrow">›</span>
-      </div>
-      <div class="diary-divider"></div>
-      <div class="diary-list-item" onclick="openMoyuNotePanel()">
-        <span class="dli-icon">🐟</span><span class="dli-label">摸鱼小记：<b id="moyuLatestText">暂无</b></span><span class="dli-arrow">›</span>
-      </div>
+    <div class="memory-grid">
+      <div class="memory-grid-item" onclick="go('lifephotos')"><div class="memory-icon home-svg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="1"/><circle cx="8" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 2-2 6 6"/></svg></div><b>生活照片</b></div>
+      <div class="memory-grid-item" onclick="openTodayStatusPanel()"><div class="memory-icon home-svg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="1"/><path d="M8 3v4M16 3v4M4 9h16M8 13h3M8 16h5"/></svg></div><b>今日状态</b></div>
+      <div class="memory-grid-item" onclick="go('moments')"><div class="memory-icon home-svg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h10a4 4 0 0 1 4 4v3a4 4 0 0 1-4 4H9l-4 3v-3a4 4 0 0 1-4-4v-3a4 4 0 0 1 4-4Z"/><path d="M10 4h7a4 4 0 0 1 4 4v2"/></svg></div><b>朋友圈</b></div>
+      <div class="memory-grid-item" onclick="go('cards')"><div class="memory-icon home-svg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V8l3-4z"/><path d="M8 4v4H4"/><path d="M10 11h6M10 14h6M10 17h4"/></svg></div><b>字卡</b></div>
     </div>
 
-    <div class="diary-divider-line"></div>
-
+    <div class="home-section-label daily-label"><span>DAILY</span></div>
     <div class="grid8">
-      <div class="fn-item" onclick="go('chat')"><div class="fn-icon">✉️<span id="chatDot" class="dot-badge hidden"></span></div><div class="fn-label">传讯</div></div>
-      <div class="fn-item" onclick="go('letters')"><div class="fn-icon">📮<span id="letterDot" class="dot-badge hidden"></span></div><div class="fn-label">写信</div></div>
-      <div class="fn-item" onclick="go('inboxLetters')"><div class="fn-icon">📬<span id="inboxLetterDot" class="dot-badge hidden"></span></div><div class="fn-label">来信</div></div>
-      <div class="fn-item" onclick="go('ledger')"><div class="fn-icon">⏳</div><div class="fn-label">记账</div></div>
-      <div class="fn-item" onclick="go('companion')"><div class="fn-icon">📋</div><div class="fn-label">陪伴记录</div></div>
-      <div class="fn-item" onclick="go('settings')"><div class="fn-icon">⚙️</div><div class="fn-label">设置</div></div>
+      <div class="fn-item" onclick="go('chat')"><div class="fn-icon home-svg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="m4 6 8 7 8-7"/></svg><span id="chatDot" class="dot-badge hidden"></span></div><div class="fn-label">传讯</div></div>
+      <div class="fn-item" onclick="go('letters')"><div class="fn-icon home-svg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v18H5z"/><path d="M8 7h8M8 11h8M8 15h5"/><path d="m15 17 3-3"/></svg><span id="letterDot" class="dot-badge hidden"></span></div><div class="fn-label">写信</div></div>
+      <div class="fn-item" onclick="go('inboxLetters')"><div class="fn-icon home-svg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16v12H4z"/><path d="M4 8 7 4h10l3 4M8 13h8"/></svg><span id="inboxLetterDot" class="dot-badge hidden"></span></div><div class="fn-label">来信</div></div>
+      <div class="fn-item" onclick="go('ledger')"><div class="fn-icon home-svg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="3" width="14" height="18" rx="1"/><path d="M9 3v18M4 7h3M4 12h3M4 17h3M12 7h5M12 11h5M12 15h4"/></svg></div><div class="fn-label">记账</div></div>
+      <div class="fn-item" onclick="go('companion')"><div class="fn-icon home-svg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h7l2 2h9v11H3z"/><path d="M10 13c1-2 4-1 4 1 0-2 3-3 4-1 1 2-2 4-4 5-2-1-5-3-4-5Z"/></svg></div><div class="fn-label">陪伴记录</div></div>
+      <div class="fn-item" onclick="go('settings')"><div class="fn-icon home-svg-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div><div class="fn-label">设置</div></div>
     </div>
   </section>
 
@@ -1274,8 +1505,8 @@ function uid(){ return Math.random().toString(36).slice(2,10)+Date.now().toStrin
 /* ============================================================
    STATE
    ============================================================ */
-let profile = { name:'陆沉', status:'Status: 跌入你的宇宙 ☆°｡', avatar:'🌙', photo:null, myName:'我', myAvatar:'🙂', myBio:'', momentsCover:null, anniversaryDate:null };
-let chatSettings = { companionName:'陆沉', delayMin:1, delayMax:5, readNoReply:false, background:null, stickers:[
+let profile = { name:'陆沉', status:'', avatar:'🌙', photo:null, myName:'我', myAvatar:'🙂', myBio:'', momentsCover:null, anniversaryDate:null };
+let chatSettings = { companionName:'陆沉', delayMin:1, delayMax:5, readNoReply:false, redPacketEnabled:false, background:null, stickers:[
   {id:'e1', type:'emoji', value:'🌙'}, {id:'e2', type:'emoji', value:'☕'}, {id:'e3', type:'emoji', value:'📖'}
 ]};
 let chatMessages = [];
@@ -1341,6 +1572,7 @@ async function init(){
   chatSettings = await sGet('chat-settings', chatSettings);
   if(typeof chatSettings.delayMax !== 'number'){ chatSettings.delayMax = Math.max(chatSettings.delayMin||1, 5); }
   if(typeof chatSettings.delayMin !== 'number'){ chatSettings.delayMin = 1; }
+  if(typeof chatSettings.redPacketEnabled !== 'boolean'){ chatSettings.redPacketEnabled = false; }
   await migrateToRecordStores(); // 只会真正跑一次：把旧版整坨存储的聊天/朋友圈/生活照片拆成逐条记录
   chatMessages = await loadInitialPage('chatMessages'); // 只加载最近一批，不再一次性读取全部历史
   cardsData = await sGet('cards-data', {groups:{}});
@@ -1512,9 +1744,9 @@ function renderHomeProfile(){
   const nameHero = document.getElementById('pNameHero');
   if(nameHero) nameHero.textContent = profile.name;
   const caption = document.getElementById('polaroidCaption');
-  if(caption) caption.textContent = profile.status || '「跌入你的宇宙。」';
+  if(caption) caption.textContent = profile.status || '';
   const ph = document.getElementById('polaroidPh');
-  if(ph) ph.innerHTML = profile.photo ? `<img loading="lazy" decoding="async" src="${profile.photo}">` : '点击上传';
+  if(ph) ph.innerHTML = profile.photo ? `<img loading="lazy" decoding="async" src="${profile.photo}">` : '';
   document.getElementById('chatCName').textContent = chatSettings.companionName;
   document.getElementById('chatTitle').textContent = '传讯 · '+chatSettings.companionName;
   const chatAvatarEl = document.getElementById('chatAvatarBox');
@@ -1525,9 +1757,9 @@ function renderHomeProfile(){
 /* ---- 纪念日：头像跟朋友圈/传讯用的是同一份数据，改一处三处都会同步 ---- */
 function renderAnniversary(){
   const mineEl = document.getElementById('annivMyAvatar');
-  if(mineEl) mineEl.innerHTML = profile.myAvatar && profile.myAvatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.myAvatar}">` : (profile.myAvatar||'🙂');
+  if(mineEl) mineEl.innerHTML = profile.myAvatar && profile.myAvatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.myAvatar}">` : (profile.myAvatar||'');
   const theirEl = document.getElementById('annivTheirAvatar');
-  if(theirEl) theirEl.innerHTML = profile.avatar && profile.avatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.avatar}">` : (profile.avatar||'🌙');
+  if(theirEl) theirEl.innerHTML = profile.avatar && profile.avatar.startsWith('data:') ? `<img loading="lazy" decoding="async" src="${profile.avatar}">` : (profile.avatar||'');
   const theirNameEl = document.getElementById('annivTheirName');
   if(theirNameEl) theirNameEl.textContent = profile.name;
   const myNameEl = document.getElementById('annivMyName');
@@ -1791,7 +2023,13 @@ function ensureTodayStatus(){
 function renderTodayStatusHome(){
   const el = document.getElementById('todayStatusText');
   if(!el) return;
-  el.textContent = todayStatus ? todayStatus.text : '暂无，点此导入';
+  if(todayStatus && todayStatus.text){
+    el.textContent = todayStatus.text;
+    el.style.color = '';
+  } else {
+    el.textContent = '[未设置状态]';
+    el.style.color = 'var(--ink-soft)';
+  }
 }
 
 function openTodayStatusPanel(){
@@ -2561,8 +2799,8 @@ function getSplicedCardText(){
 const REDPACKET_NOTES = ['给你买奶茶','塞进你口袋','抢一个','爱的红包','恭喜发财','小心心'];
 function pickReplyFor(userText){
   const roll = Math.random();
-  // 小概率随手发个红包，纯粹随机，不针对用户说了什么
-  if(roll < 0.05){
+  // 开启“允许发送红包”后，沿用原来的小概率随机红包机制；关闭时完全不会自动发红包
+  if(chatSettings.redPacketEnabled && roll < 0.05){
     const amount = (Math.random()*188+1).toFixed(2);
     const note = REDPACKET_NOTES[Math.floor(Math.random()*REDPACKET_NOTES.length)];
     return { type:'redpacket', amount, note, opened:false };
@@ -2921,6 +3159,10 @@ function openChatSettings(){
       <span>已读不回<div style="font-size:10.5px;color:var(--ink-soft);font-weight:400;">开启后每条消息有 30% 几率已读不回，不是每次都不回</div></span>
       <div class="switch ${chatSettings.readNoReply?'on':''}" id="csReadNoReply" onclick="this.classList.toggle('on')"><div class="dot"></div></div>
     </div>
+    <div class="switch-row">
+      <span>允许发送红包<div style="font-size:10.5px;color:var(--ink-soft);font-weight:400;">开启后 TA 有机会随机给你发红包；关闭后不会自动发红包</div></span>
+      <div class="switch ${chatSettings.redPacketEnabled?'on':''}" id="csRedPacketEnabled" onclick="this.classList.toggle('on')"><div class="dot"></div></div>
+    </div>
     <div class="box-title" style="margin-top:14px;">节奏</div>
     <div class="switch-row">
       <span>主动发消息给我</span>
@@ -3026,6 +3268,7 @@ async function saveChatSettings(){
   chatSettings.delayMin = parseInt(document.getElementById('csDelayMin').value,10);
   chatSettings.delayMax = parseInt(document.getElementById('csDelayMax').value,10);
   chatSettings.readNoReply = document.getElementById('csReadNoReply').classList.contains('on');
+  chatSettings.redPacketEnabled = document.getElementById('csRedPacketEnabled').classList.contains('on');
   await sSet('chat-settings', chatSettings);
   proactiveMsgSettings.enabled = document.getElementById('csProEnabled').classList.contains('on');
   const pMin = Math.max(1, Math.min(300, parseInt(document.getElementById('csProMin').value,10) || 1));
@@ -4223,15 +4466,18 @@ function applyCustomBubbleCSSToPage(){
 function renderMoyuHome(){
   const el = document.getElementById('moyuLatestText');
   if(!el) return;
-  if(!moyuState.enabled){ el.textContent = '未开启'; return; }
+  // 首页只展示系统实际生成的最新摸鱼记录；没有记录时显示占位文案（与参考图一致）。
   const sess = moyuState.currentSession;
-  if(!sess){ el.textContent = '暂无记录'; return; }
-  if(moyuState.showDetails === false){
-    el.textContent = (sess.location || '工作中') + ' · 进行中';
-    return;
+  const latest = sess && sess.records && sess.records.length
+    ? sess.records[sess.records.length-1]
+    : null;
+  if(latest && latest.text){
+    el.textContent = latest.text;
+    el.style.color = '';
+  } else {
+    el.textContent = '[暂无记录]';
+    el.style.color = 'var(--ink-soft)';
   }
-  const latest = (sess.records && sess.records.length) ? sess.records[sess.records.length-1] : null;
-  el.textContent = latest ? latest.text : ((sess.location||'') + ' · 进行中');
 }
 function pickMoyuActivity(){
   const acts = moyuState.activities || [];
