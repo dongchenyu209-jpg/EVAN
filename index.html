@@ -2839,7 +2839,7 @@ function getRandomCardText(){
   const idx = Math.floor(Math.random()*pool.length);
   return pool[idx].card;
 }
-/* 拼字卡：从字卡库里随机抽 2~5 张拼成一段 */
+/* 拼字卡：从字卡库里随机抽 2~4 张拼成一段 */
 function getSplicedCardText(){
   const groups = cardsData.groups||{};
   let pool = [];
@@ -2847,8 +2847,8 @@ function getSplicedCardText(){
   if(pool.length===0) return null;
   if(pool.length===1) return pool[0];
   const shuffled = pool.slice().sort(()=> Math.random()-0.5);
-  // 张数限制在 2~5 张之间（如果库里不够 5 张，就按实际张数封顶）
-  const maxN = Math.min(5, shuffled.length);
+  // 张数限制在 2~4 张之间（如果库里不够 4 张，就按实际张数封顶）
+  const maxN = Math.min(4, shuffled.length);
   const n = maxN <= 2 ? maxN : 2 + Math.floor(Math.random() * (maxN - 1));
   const picked = shuffled.slice(0, n);
   lastCardUsed = {text: picked[0]};
@@ -3335,7 +3335,7 @@ function openChatSettings(){
     <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">在最短～最长天数之间纯随机挑时间发朋友圈，发完再排下一次，可多次触发</div>
     <div class="box-title" style="margin-top:14px;">拼字卡</div>
     <div class="switch-row">
-      <span>拼字卡<div style="font-size:10.5px;color:var(--ink-soft);font-weight:400;">开启后有机会随机把 2~5 张字卡拼在一起发，不是每条都拼</div></span>
+      <span>拼字卡<div style="font-size:10.5px;color:var(--ink-soft);font-weight:400;">开启后有机会随机把 2~4 张字卡拼在一起发，不是每条都拼</div></span>
       <div class="switch ${spliceCardsEnabled?'on':''}" id="csSpliceCards" onclick="this.classList.toggle('on')"><div class="dot"></div></div>
     </div>
     <div class="box-title" style="margin-top:14px;">摸鱼记录</div>
