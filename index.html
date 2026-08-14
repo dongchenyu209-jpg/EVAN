@@ -1542,8 +1542,8 @@ let moyuState = {
   history: [],          // 已结束的班次
   nextAt: null
 };
-// 主动消息：开关 + 固定间隔（分钟，实际会在附近随机浮动一点）
-let proactiveMsgSettings = { enabled: true, minMinutes: 1, maxMinutes: 60 }; // 默认 1 分钟 ~ 1 小时，滑条上限 5 小时
+// 主动消息：开关 + 最短/最长分钟区间随机
+let proactiveMsgSettings = { enabled: true, intervalMinutes: 60 }; // 单滑条 1~120，在 1～该值分钟内随机
 // 朋友圈互动概率（0~100）与主动发朋友圈天数区间，均可在传讯设置里调节
 let momentInteractSettings = { likeProb: 60, commentProb: 60, replyProb: 60, minDays: 1, maxDays: 15 };
 // 拼字卡：开启后回复会随机把多张字卡拼成一段再发
@@ -1565,50 +1565,111 @@ const FONT_MAP = {
    INIT
    ============================================================ */
 async function init(){
+  // ---- 阶段 1：只拿首页必需数据，尽快首屏 ----
   profile = await sGet('profile', profile);
   if(!profile.myName) profile.myName = '我';
   if(!profile.myAvatar) profile.myAvatar = '🙂';
   if(profile.momentsCover === undefined) profile.momentsCover = null;
+  try {
+    themeSettings = await sGet('theme-settings', themeSettings);
+  } catch(e) {}
+  if(!themeSettings.customBg) themeSettings.customBg = '';
+  if(!themeSettings.customBgImage) themeSettings.customBgImage = '';
+  if(!themeSettings.annivBg) themeSettings.annivBg = '';
+  if(!themeSettings.annivBgImage) themeSettings.annivBgImage = '';
+  if(themeSettings.inkColor === undefined) themeSettings.inkColor = '';
+  if(!themeSettings.secondaryFont) themeSettings.secondaryFont = 'serif';
+  if(themeSettings.nameColor === undefined) themeSettings.nameColor = '';
+  try { customBubbleCSS = await sGet('custom-bubble-css', ''); } catch(e) {}
+  applyTheme();
+  applyCustomBubbleCSSToPage();
+  renderHomeProfile();
+  // 让出一帧给浏览器先画首页，避免存储全读完才出画面
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  // ---- 阶段 2：其余数据并行加载 ----
   chatSettings = await sGet('chat-settings', chatSettings);
-  if(typeof chatSettings.delayMax !== 'number'){ chatSettings.delayMax = Math.max(chatSettings.delayMin||1, 5); }
-  if(typeof chatSettings.delayMin !== 'number'){ chatSettings.delayMin = 1; }
-  if(typeof chatSettings.redPacketEnabled !== 'boolean'){ chatSettings.redPacketEnabled = false; }
-  await migrateToRecordStores(); // 只会真正跑一次：把旧版整坨存储的聊天/朋友圈/生活照片拆成逐条记录
-  chatMessages = await loadInitialPage('chatMessages'); // 只加载最近一批，不再一次性读取全部历史
-  cardsData = await sGet('cards-data', {groups:{}});
-  ledgerEntries = await sGet('ledger-entries', []);
-  periodEntries = await sGet('period-entries', []);
+  if(typeof chatSettings.delayMin !== 'number') chatSettings.delayMin = 1;
+  if(typeof chatSettings.delayMax !== 'number') chatSettings.delayMax = 5;
+  chatSettings.delayMin = Math.max(1, Math.min(5, Math.round(chatSettings.delayMin)));
+  chatSettings.delayMax = Math.max(chatSettings.delayMin, Math.min(5, Math.round(chatSettings.delayMax)));
+  delete chatSettings.delayUnit;
+  if(typeof chatSettings.redPacketEnabled !== 'boolean') chatSettings.redPacketEnabled = false;
+
+  await migrateToRecordStores();
+
+  const [
+    _chatMessages, _cardsData, _ledgerEntries, _periodEntries, _diaryEntries,
+    _momentsPosts, _momentEvents, _letters, _inboxLetters, _callLogs,
+    _proactiveState, _chatUnread, _letterUnread, _inboxLetterUnread, _momentsUnread,
+    _lifePhotos, _statusPool, _todayStatus, _todayStatusHistory, _moyuState,
+    _proactiveMsgSettings, _momentInteractSettings, _spliceCardsEnabled
+  ] = await Promise.all([
+    loadInitialPage('chatMessages'),
+    sGet('cards-data', {groups:{}}),
+    sGet('ledger-entries', []),
+    sGet('period-entries', []),
+    sGet('diary-entries', []),
+    loadInitialPage('momentsPosts'),
+    sGet('moment-events', []),
+    sGet('letters', []),
+    sGet('inbox-letters', []),
+    sGet('call-logs', []),
+    sGet('proactive-state', { nextMsgAt:null, nextLetterAt:null, nextCallAt:null, nextMomentAt:null, nextCareAt:null }),
+    sGet('chat-unread', false),
+    sGet('letter-unread', false),
+    sGet('inbox-letter-unread', false),
+    sGet('moments-unread', false),
+    loadInitialPage('lifePhotos'),
+    sGet('status-pool', []),
+    sGet('today-status', null),
+    sGet('today-status-history', []),
+    sGet('moyu-state', moyuState),
+    sGet('proactive-msg-settings', proactiveMsgSettings),
+    sGet('moment-interact-settings', momentInteractSettings),
+    sGet('splice-cards-enabled', false)
+  ]);
+  chatMessages = _chatMessages;
+  cardsData = _cardsData;
+  ledgerEntries = _ledgerEntries;
+  periodEntries = _periodEntries;
+  diaryEntries = _diaryEntries;
+  momentsPosts = _momentsPosts;
+  momentEvents = _momentEvents;
+  letters = _letters;
+  inboxLetters = _inboxLetters;
+  callLogs = _callLogs;
+  proactiveState = _proactiveState;
+  chatUnread = _chatUnread;
+  letterUnread = _letterUnread;
+  inboxLetterUnread = _inboxLetterUnread;
+  momentsUnread = _momentsUnread;
+  lifePhotos = _lifePhotos;
+  statusPool = _statusPool;
+  todayStatus = _todayStatus;
+  todayStatusHistory = _todayStatusHistory || [];
+  moyuState = _moyuState;
+  proactiveMsgSettings = _proactiveMsgSettings;
+  momentInteractSettings = _momentInteractSettings;
+  spliceCardsEnabled = !!_spliceCardsEnabled;
+
   await loadCompanionData();
-  diaryEntries = await sGet('diary-entries', []);
-  momentsPosts = await loadInitialPage('momentsPosts');
-  momentEvents = await sGet('moment-events', []);
-  letters = await sGet('letters', []);
-  inboxLetters = await sGet('inbox-letters', []);
-  callLogs = await sGet('call-logs', []);
-  // 兼容旧数据：以前"写信"和"来信"混在一起，把TA主动写的信挪到来信列表里
+
+  // 兼容旧数据：写信/来信混在一起
   const legacyBotLetters = letters.filter(l=>l.from==='bot');
   if(legacyBotLetters.length){
     inboxLetters = [...legacyBotLetters, ...inboxLetters].sort((a,b)=> b.time-a.time);
     letters = letters.filter(l=>l.from!=='bot');
-    await sSet('letters', letters);
-    await sSet('inbox-letters', inboxLetters);
+    sSet('letters', letters);
+    sSet('inbox-letters', inboxLetters);
   }
-  proactiveState = await sGet('proactive-state', { nextMsgAt:null, nextLetterAt:null, nextCallAt:null, nextMomentAt:null, nextCareAt:null });
-  chatUnread = await sGet('chat-unread', false);
-  letterUnread = await sGet('letter-unread', false);
-  inboxLetterUnread = await sGet('inbox-letter-unread', false);
-  momentsUnread = await sGet('moments-unread', false);
-  lifePhotos = await loadInitialPage('lifePhotos');
-  statusPool = await sGet('status-pool', []);
-  todayStatus = await sGet('today-status', null);
-  todayStatusHistory = await sGet('today-status-history', []);
-  ensureTodayStatus();
-  moyuState = await sGet('moyu-state', moyuState);
+
+  // moyu / proactiveMsg / momentInteract 规范化（与原先一致，精简写法）
   if(!Array.isArray(moyuState.activities)) moyuState.activities = [];
   if(!Array.isArray(moyuState.locations)) moyuState.locations = [];
   if(!Array.isArray(moyuState.history)) moyuState.history = [];
   if(typeof moyuState.showDetails !== 'boolean') moyuState.showDetails = true;
-  // 兼容旧版：把扁平 records 收成一班
+  if(typeof moyuState.enabled !== 'boolean') moyuState.enabled = false;
   if(Array.isArray(moyuState.records) && moyuState.records.length && !moyuState.currentSession){
     moyuState.currentSession = {
       id: uid(), location: '未知地点', startTime: moyuState.records[moyuState.records.length-1].time,
@@ -1616,22 +1677,17 @@ async function init(){
     };
     delete moyuState.records;
   }
-  proactiveMsgSettings = await sGet('proactive-msg-settings', proactiveMsgSettings);
-  // 兼容旧版，并限制在 1~300 分钟（5小时）
-  if(typeof proactiveMsgSettings.minMinutes !== 'number' || typeof proactiveMsgSettings.maxMinutes !== 'number'){
-    if(typeof proactiveMsgSettings.intervalMinutes === 'number'){
-      const base = proactiveMsgSettings.intervalMinutes;
-      proactiveMsgSettings.minMinutes = Math.max(1, Math.min(300, Math.round(base * 0.5)));
-      proactiveMsgSettings.maxMinutes = Math.max(proactiveMsgSettings.minMinutes, Math.min(300, Math.round(base * 2)));
-    } else {
-      proactiveMsgSettings.minMinutes = 1;
-      proactiveMsgSettings.maxMinutes = 60;
+  {
+    let iv = Number(proactiveMsgSettings.intervalMinutes);
+    if(!Number.isFinite(iv)){
+      const oldMax = Number(proactiveMsgSettings.maxMinutes);
+      iv = Number.isFinite(oldMax) ? oldMax : 60;
     }
+    proactiveMsgSettings.intervalMinutes = Math.max(1, Math.min(120, Math.round(iv)));
+    delete proactiveMsgSettings.minMinutes;
+    delete proactiveMsgSettings.maxMinutes;
   }
-  proactiveMsgSettings.minMinutes = Math.max(1, Math.min(300, proactiveMsgSettings.minMinutes));
-  proactiveMsgSettings.maxMinutes = Math.max(proactiveMsgSettings.minMinutes, Math.min(300, proactiveMsgSettings.maxMinutes));
   if(typeof proactiveMsgSettings.enabled !== 'boolean') proactiveMsgSettings.enabled = true;
-  momentInteractSettings = await sGet('moment-interact-settings', momentInteractSettings);
   if(typeof momentInteractSettings.likeProb !== 'number') momentInteractSettings.likeProb = 60;
   if(typeof momentInteractSettings.commentProb !== 'number') momentInteractSettings.commentProb = 60;
   if(typeof momentInteractSettings.replyProb !== 'number') momentInteractSettings.replyProb = 60;
@@ -1642,40 +1698,32 @@ async function init(){
   momentInteractSettings.replyProb = Math.max(0, Math.min(100, momentInteractSettings.replyProb));
   momentInteractSettings.minDays = Math.max(1, Math.min(30, momentInteractSettings.minDays));
   momentInteractSettings.maxDays = Math.max(momentInteractSettings.minDays, Math.min(30, momentInteractSettings.maxDays));
-  spliceCardsEnabled = await sGet('splice-cards-enabled', false);
-  resumeMoyuSchedule();
-  renderMoyuHome();
-    themeSettings = await sGet('theme-settings', themeSettings);
-  // 兼容旧备份：补全新增字段
-  if(!themeSettings.customBg) themeSettings.customBg = '';
-  if(!themeSettings.customBgImage) themeSettings.customBgImage = '';
-  if(!themeSettings.annivBg) themeSettings.annivBg = '';
-  if(!themeSettings.annivBgImage) themeSettings.annivBgImage = '';
-  if(themeSettings.inkColor === undefined) themeSettings.inkColor = '';
-  if(!themeSettings.secondaryFont) themeSettings.secondaryFont = 'serif';
-  if(themeSettings.nameColor === undefined) themeSettings.nameColor = '';
-  customBubbleCSS = await sGet('custom-bubble-css', '');
 
-  applyTheme();
-  applyCustomBubbleCSSToPage();
-  // 首屏只渲染当前首页需要的内容；其他页面在切换到时再懒加载，避免移动端启动时一次性重建大量 DOM。
-  renderHomeProfile();
+  // 首页轻量补渲染
   renderTodayStatusHome();
-  resumeLetterTimers();
-  resumeInboxLetterReplyTimers();
+  renderMoyuHome();
   renderUnreadDots();
-  ensureProactiveSchedule();
-  checkProactive();
-  setInterval(checkProactive, 20000);
-  checkMomentEvents();
+
+  // ---- 阶段 3：延后挂定时器 / 回信恢复，不挡首屏 ----
+  const defer = (fn) => {
+    if(typeof requestIdleCallback === 'function') requestIdleCallback(() => { try{ fn(); }catch(e){ console.warn(e); } }, { timeout: 2000 });
+    else setTimeout(() => { try{ fn(); }catch(e){ console.warn(e); } }, 0);
+  };
+  defer(() => {
+    resumeLetterTimers();
+    resumeInboxLetterReplyTimers();
+    ensureProactiveSchedule();
+    armAllProactiveTimers();
+    checkMomentEvents();
+    checkQuestionnaireReplies();
+    resumeMoyuSchedule();
+    if(!hasReplyScheduled()) maybeScheduleFromHistory();
+  });
   setInterval(checkMomentEvents, 20000);
   setInterval(checkMoyuTick, 20000);
-  checkQuestionnaireReplies();
   setInterval(checkQuestionnaireReplies, 20000);
   const periodEl = document.getElementById('periodDate');
-  if(periodEl) periodEl.valueAsDate = new Date();
-
-  if(!hasReplyScheduled() ) maybeScheduleFromHistory();
+  if(periodEl) try{ periodEl.valueAsDate = new Date(); }catch(e){}
 }
 init();
 
@@ -2122,8 +2170,14 @@ function refreshTodayStatusIfDue(){
   const chatStatEl = document.getElementById('chatCStat');
   if(chatStatEl && currentView==='chat') chatStatEl.textContent = todayStatus ? todayStatus.text : '暂无状态';
 }
-document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') refreshTodayStatusIfDue(); });
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible'){
+    refreshTodayStatusIfDue();
+    if(typeof checkProactiveDue === 'function') checkProactiveDue(); // 切回前台时补发被后台冻结的主动消息/信件/来电/动态
+  }
+});
 setInterval(refreshTodayStatusIfDue, 10*60*1000); // 前台长时间停留时，每 10 分钟兜底检查一次
+setInterval(()=>{ if(document.visibilityState==='visible' && typeof checkProactiveDue==='function') checkProactiveDue(); }, 60*1000); // 前台长时间停留时，每 1 分钟兜底检查一次主动消息
 
 
 function normalizeCardsJson(raw){
@@ -2723,9 +2777,13 @@ function handleIncomingForBot(userText){
   scheduleAutoReply(userText);
 }
 
+/** 显示：1s / 2分钟 等（上限 120 秒） */
 function getReplyDelayMs(){
-  const lo = Math.min(chatSettings.delayMin, chatSettings.delayMax);
-  const hi = Math.max(chatSettings.delayMin, chatSettings.delayMax);
+  // 单位：分钟，滑条 1～5
+  const lo0 = Number(chatSettings.delayMin) || 1;
+  const hi0 = Number(chatSettings.delayMax) || 5;
+  const lo = Math.max(1, Math.min(5, Math.min(lo0, hi0)));
+  const hi = Math.max(lo, Math.min(5, Math.max(lo0, hi0)));
   const chosen = lo + Math.random()*(hi-lo);
   return Math.max(1, chosen) * 60 * 1000;
 }
@@ -2834,58 +2892,149 @@ function randomBetween(minMs, maxMs){ return minMs + Math.random()*(maxMs-minMs)
 function scheduleNextProactiveMsg(){
   if(proactiveMsgSettings.enabled === false){
     proactiveState.nextMsgAt = null;
+    if(typeof _proactiveMsgTimer !== 'undefined' && _proactiveMsgTimer){ clearTimeout(_proactiveMsgTimer); _proactiveMsgTimer = null; }
     return;
   }
-  // 纯随机：在最短～最长滑块区间内任意挑一个时间触发；触发后立即再排下一次，可在区间内多次触发
-  const lo = Math.max(1, Math.min(300, Math.min(proactiveMsgSettings.minMinutes||1, proactiveMsgSettings.maxMinutes||60)));
-  const hi = Math.max(lo, Math.min(300, Math.max(proactiveMsgSettings.minMinutes||1, proactiveMsgSettings.maxMinutes||60)));
-  proactiveState.nextMsgAt = Date.now() + randomBetween(lo*60*1000, hi*60*1000);
+  // 单滑条：1～intervalMinutes（上限 120）分钟内随机
+  const hi = Math.max(1, Math.min(120, Number(proactiveMsgSettings.intervalMinutes) || 60));
+  proactiveState.nextMsgAt = Date.now() + randomBetween(1*60*1000, hi*60*1000);
 }
 function scheduleNextProactiveLetter(){
-  // 同样不设定死板的窗口，从一小时后到十来天后都有可能
   proactiveState.nextLetterAt = Date.now() + randomBetween(1*3600*1000, 10*24*3600*1000);
 }
 function scheduleNextProactiveCall(){
-  // 打电话也不设定死板窗口，几分钟后到好几天后都有可能
   proactiveState.nextCallAt = Date.now() + randomBetween(5*60*1000, 4*24*3600*1000);
 }
 function ensureProactiveSchedule(){
-  let changed = false;
+  // 刷新重算：不接着上次剩余时间，每次启动都重新随机排程
   if(proactiveMsgSettings.enabled !== false){
-    if(!proactiveState.nextMsgAt){ scheduleNextProactiveMsg(); changed = true; }
-  } else if(proactiveState.nextMsgAt){ proactiveState.nextMsgAt = null; changed = true; }
-  if(!proactiveState.nextLetterAt){ scheduleNextProactiveLetter(); changed = true; }
-  if(!proactiveState.nextCallAt){ scheduleNextProactiveCall(); changed = true; }
+    scheduleNextProactiveMsg();
+  } else {
+    proactiveState.nextMsgAt = null;
+  }
+  scheduleNextProactiveLetter();
+  scheduleNextProactiveCall();
+  scheduleNextProactiveMoment();
+  sSet('proactive-state', proactiveState);
+}
+
+/* 不用轮询：按 next*At 直接 setTimeout */
+let _proactiveMsgTimer = null;
+let _proactiveLetterTimer = null;
+let _proactiveCallTimer = null;
+let _proactiveMomentTimer = null;
+
+function armProactiveMsgTimer(){
+  if(_proactiveMsgTimer){ clearTimeout(_proactiveMsgTimer); _proactiveMsgTimer = null; }
+  if(proactiveMsgSettings.enabled === false){
+    proactiveState.nextMsgAt = null;
+    return;
+  }
+  if(!proactiveState.nextMsgAt){
+    scheduleNextProactiveMsg();
+    sSet('proactive-state', proactiveState);
+  }
+  const delay = Math.max(0, proactiveState.nextMsgAt - Date.now());
+  _proactiveMsgTimer = setTimeout(()=>{
+    _proactiveMsgTimer = null;
+    if(proactiveMsgSettings.enabled === false) return;
+    scheduleNextProactiveMsg();
+    sSet('proactive-state', proactiveState);
+    armProactiveMsgTimer();
+    sendProactiveMessage();
+  }, delay);
+}
+function armProactiveLetterTimer(){
+  if(_proactiveLetterTimer){ clearTimeout(_proactiveLetterTimer); _proactiveLetterTimer = null; }
+  if(!proactiveState.nextLetterAt){
+    scheduleNextProactiveLetter();
+    sSet('proactive-state', proactiveState);
+  }
+  const delay = Math.max(0, proactiveState.nextLetterAt - Date.now());
+  _proactiveLetterTimer = setTimeout(async ()=>{
+    _proactiveLetterTimer = null;
+    scheduleNextProactiveLetter();
+    await sSet('proactive-state', proactiveState);
+    armProactiveLetterTimer();
+    await sendProactiveLetter();
+  }, delay);
+}
+function armProactiveCallTimer(){
+  if(_proactiveCallTimer){ clearTimeout(_proactiveCallTimer); _proactiveCallTimer = null; }
+  if(!proactiveState.nextCallAt){
+    scheduleNextProactiveCall();
+    sSet('proactive-state', proactiveState);
+  }
+  const delay = Math.max(0, proactiveState.nextCallAt - Date.now());
+  _proactiveCallTimer = setTimeout(()=>{
+    _proactiveCallTimer = null;
+    scheduleNextProactiveCall();
+    sSet('proactive-state', proactiveState);
+    armProactiveCallTimer();
+    if(!activeCall) receiveIncomingCall();
+  }, delay);
+}
+function armProactiveMomentTimer(){
+  if(_proactiveMomentTimer){ clearTimeout(_proactiveMomentTimer); _proactiveMomentTimer = null; }
   if(!proactiveState.nextMomentAt){
     scheduleNextProactiveMoment();
-    changed = true;
+    sSet('proactive-state', proactiveState);
   }
-  if(changed) sSet('proactive-state', proactiveState);
-}
-async function checkProactive(){
-  let changed = false;
-  if(proactiveMsgSettings.enabled !== false && proactiveState.nextMsgAt && Date.now() >= proactiveState.nextMsgAt){
-    // 先重新排下一次的随机时间戳，再触发这次的"正在输入中→发送"，避免这次的打字停顿期间被下一轮 checkProactive 重复触发
-    scheduleNextProactiveMsg();
-    sendProactiveMessage();
-    changed = true;
-  }
-  if(proactiveState.nextLetterAt && Date.now() >= proactiveState.nextLetterAt){
-    await sendProactiveLetter();
-    scheduleNextProactiveLetter();
-    changed = true;
-  }
-  if(proactiveState.nextCallAt && Date.now() >= proactiveState.nextCallAt){
-    scheduleNextProactiveCall();
-    changed = true;
-    if(!activeCall) receiveIncomingCall(); // 如果正忙线着就跳过这一次，下次还会随机再来
-  }
-  if(proactiveState.nextMomentAt && Date.now() >= proactiveState.nextMomentAt){
+  const delay = Math.max(0, proactiveState.nextMomentAt - Date.now());
+  _proactiveMomentTimer = setTimeout(async ()=>{
+    _proactiveMomentTimer = null;
+    scheduleNextProactiveMoment();
+    await sSet('proactive-state', proactiveState);
+    armProactiveMomentTimer();
     await sendProactiveMoment();
-    scheduleNextProactiveMoment(); // 发完这一条，重新在下一个 1～15 天窗口里纯随机挑一个时间点，不预先定好次数
-    changed = true;
+  }, delay);
+}
+function armAllProactiveTimers(){
+  armProactiveMsgTimer();
+  armProactiveLetterTimer();
+  armProactiveCallTimer();
+  armProactiveMomentTimer();
+}
+/** 兼容旧调用：改为挂 setTimeout，不再轮询 */
+async function checkProactive(){
+  armAllProactiveTimers();
+}
+
+/* ============================================================
+   前台补发检查：App 从后台切回前台时，setTimeout 可能已被浏览器
+   冻结/丢弃而没有按时触发，这里主动比对 next*At 与当前时间，
+   过期了就立刻补发，而不是干等一个可能已经失效的定时器。
+   ============================================================ */
+function checkProactiveDue(){
+  const now = Date.now();
+  if(proactiveMsgSettings.enabled !== false && proactiveState.nextMsgAt && proactiveState.nextMsgAt <= now){
+    if(_proactiveMsgTimer){ clearTimeout(_proactiveMsgTimer); _proactiveMsgTimer = null; }
+    scheduleNextProactiveMsg();
+    sSet('proactive-state', proactiveState);
+    armProactiveMsgTimer();
+    sendProactiveMessage();
   }
-  if(changed) await sSet('proactive-state', proactiveState);
+  if(proactiveState.nextLetterAt && proactiveState.nextLetterAt <= now){
+    if(_proactiveLetterTimer){ clearTimeout(_proactiveLetterTimer); _proactiveLetterTimer = null; }
+    scheduleNextProactiveLetter();
+    sSet('proactive-state', proactiveState);
+    armProactiveLetterTimer();
+    sendProactiveLetter();
+  }
+  if(proactiveState.nextCallAt && proactiveState.nextCallAt <= now){
+    if(_proactiveCallTimer){ clearTimeout(_proactiveCallTimer); _proactiveCallTimer = null; }
+    scheduleNextProactiveCall();
+    sSet('proactive-state', proactiveState);
+    armProactiveCallTimer();
+    if(typeof activeCall === 'undefined' || !activeCall) receiveIncomingCall();
+  }
+  if(proactiveState.nextMomentAt && proactiveState.nextMomentAt <= now){
+    if(_proactiveMomentTimer){ clearTimeout(_proactiveMomentTimer); _proactiveMomentTimer = null; }
+    scheduleNextProactiveMoment();
+    sSet('proactive-state', proactiveState);
+    armProactiveMomentTimer();
+    sendProactiveMoment();
+  }
 }
 function sendProactiveMessage(){
   showTyping(true);
@@ -3151,10 +3300,10 @@ function openChatSettings(){
     <label class="field">梦角名字</label>
     <input type="text" id="csName" value="${chatSettings.companionName}">
     <label class="field">最快回复：<span id="csDelayMinVal">${chatSettings.delayMin}</span> 分钟</label>
-    <input type="range" min="1" max="10" step="1" value="${chatSettings.delayMin}" oninput="document.getElementById('csDelayMinVal').textContent=this.value" id="csDelayMin" style="width:100%;">
+    <input type="range" min="1" max="5" step="1" value="${Math.min(5, Math.max(1, chatSettings.delayMin||1))}" oninput="document.getElementById('csDelayMinVal').textContent=this.value" id="csDelayMin" style="width:100%;">
     <label class="field">最慢回复：<span id="csDelayMaxVal">${chatSettings.delayMax}</span> 分钟</label>
-    <input type="range" min="1" max="10" step="1" value="${chatSettings.delayMax}" oninput="document.getElementById('csDelayMaxVal').textContent=this.value" id="csDelayMax" style="width:100%;">
-    <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">每次回复会在这个区间里随机挑一个时间，不是固定的</div>
+    <input type="range" min="1" max="5" step="1" value="${Math.min(5, Math.max(1, chatSettings.delayMax||5))}" oninput="document.getElementById('csDelayMaxVal').textContent=this.value" id="csDelayMax" style="width:100%;">
+    <div style="font-size:11px;color:var(--ink-soft);margin-top:4px;">1～5 分钟。每次回复会在这个区间里随机挑一个时间</div>
     <div class="switch-row">
       <span>已读不回<div style="font-size:10.5px;color:var(--ink-soft);font-weight:400;">开启后每条消息有 30% 几率已读不回，不是每次都不回</div></span>
       <div class="switch ${chatSettings.readNoReply?'on':''}" id="csReadNoReply" onclick="this.classList.toggle('on')"><div class="dot"></div></div>
@@ -3168,11 +3317,9 @@ function openChatSettings(){
       <span>主动发消息给我</span>
       <div class="switch ${proactiveMsgSettings.enabled!==false?'on':''}" id="csProEnabled" onclick="this.classList.toggle('on')"><div class="dot"></div></div>
     </div>
-    <label class="field">最短：<span id="csProMinVal">${proactiveMsgSettings.minMinutes||1}</span> 分钟</label>
-    <input type="range" min="1" max="300" step="1" value="${Math.min(300, proactiveMsgSettings.minMinutes||1)}" oninput="document.getElementById('csProMinVal').textContent=this.value" id="csProMin" style="width:100%;">
-    <label class="field">最长：<span id="csProMaxVal">${proactiveMsgSettings.maxMinutes||60}</span> 分钟</label>
-    <input type="range" min="1" max="300" step="1" value="${Math.min(300, proactiveMsgSettings.maxMinutes||60)}" oninput="document.getElementById('csProMaxVal').textContent=this.value" id="csProMax" style="width:100%;">
-    <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">在最短～最长之间纯随机挑时间发（范围 1 分钟～5 小时），可自己调节</div>
+    <label class="field">间隔：<span id="csProIntervalVal">${Math.min(120, proactiveMsgSettings.intervalMinutes||60)}</span> 分钟</label>
+    <input type="range" min="1" max="120" step="1" value="${Math.min(120, Math.max(1, proactiveMsgSettings.intervalMinutes||60))}" oninput="document.getElementById('csProIntervalVal').textContent=this.value" id="csProInterval" style="width:100%;">
+    <div style="font-size:11px;color:var(--ink-soft);margin-top:2px;">在 1 分钟～该值之间随机挑时间主动发（1～120 分钟）</div>
     <div class="box-title" style="margin-top:14px;">朋友圈互动</div>
     <div style="font-size:11px;color:var(--ink-soft);margin-bottom:6px;">你发朋友圈后，TA 点赞 / 评论的概率；以及你评论后 TA 回复的概率。0% 从不，100% 必做。</div>
     <label class="field">点赞概率：<span id="csLikeProbVal">${momentInteractSettings.likeProb||60}</span>%</label>
@@ -3265,19 +3412,22 @@ function onStickerFile(e){
 }
 async function saveChatSettings(){
   chatSettings.companionName = document.getElementById('csName').value.trim() || chatSettings.companionName;
-  chatSettings.delayMin = parseInt(document.getElementById('csDelayMin').value,10);
-  chatSettings.delayMax = parseInt(document.getElementById('csDelayMax').value,10);
+  let dMin = Math.max(1, Math.min(5, parseInt(document.getElementById('csDelayMin').value,10) || 1));
+  let dMax = Math.max(1, Math.min(5, parseInt(document.getElementById('csDelayMax').value,10) || 5));
+  chatSettings.delayMin = Math.min(dMin, dMax);
+  chatSettings.delayMax = Math.max(dMin, dMax);
+  delete chatSettings.delayUnit;
   chatSettings.readNoReply = document.getElementById('csReadNoReply').classList.contains('on');
   chatSettings.redPacketEnabled = document.getElementById('csRedPacketEnabled').classList.contains('on');
   await sSet('chat-settings', chatSettings);
   proactiveMsgSettings.enabled = document.getElementById('csProEnabled').classList.contains('on');
-  const pMin = Math.max(1, Math.min(300, parseInt(document.getElementById('csProMin').value,10) || 1));
-  const pMax = Math.max(1, Math.min(300, parseInt(document.getElementById('csProMax').value,10) || 60));
-  proactiveMsgSettings.minMinutes = Math.min(pMin, pMax);
-  proactiveMsgSettings.maxMinutes = Math.max(pMin, pMax);
+  proactiveMsgSettings.intervalMinutes = Math.max(1, Math.min(120, parseInt(document.getElementById('csProInterval').value,10) || 60));
+  delete proactiveMsgSettings.minMinutes;
+  delete proactiveMsgSettings.maxMinutes;
   await sSet('proactive-msg-settings', proactiveMsgSettings);
   scheduleNextProactiveMsg();
   await sSet('proactive-state', proactiveState);
+  if(typeof armProactiveMsgTimer === 'function') armProactiveMsgTimer();
   momentInteractSettings.likeProb = Math.max(0, Math.min(100, parseInt(document.getElementById('csLikeProb').value,10) || 0));
   momentInteractSettings.commentProb = Math.max(0, Math.min(100, parseInt(document.getElementById('csCommentProb').value,10) || 0));
   momentInteractSettings.replyProb = Math.max(0, Math.min(100, parseInt(document.getElementById('csReplyProb').value,10) || 0));
@@ -3289,6 +3439,7 @@ async function saveChatSettings(){
   // 区间变了就按新区间重排下一次主动发朋友圈
   scheduleNextProactiveMoment();
   await sSet('proactive-state', proactiveState);
+  if(typeof armProactiveMomentTimer === 'function') armProactiveMomentTimer();
   spliceCardsEnabled = document.getElementById('csSpliceCards').classList.contains('on');
   await sSet('splice-cards-enabled', spliceCardsEnabled);
   const wasEnabled = moyuState.enabled;
