@@ -9359,9 +9359,9 @@ transition-duration: .01ms !important;
     <!-- v3.8.y：底部统一装进一个卡片框（版本/加载/提示/按钮成一整体，与顶部品牌卡片呼应） -->
     <div class="splash-footcard">
       <!-- v3.8.y：底部版本块——两行：名称+版本 / 部署时间+实时秒数（实时秒写入 #splash-ver-live） -->
-      <div class="splash-ver" id="splash-ver" data-build-ts="1789396162713">
+      <div class="splash-ver" id="splash-ver" data-build-ts="1789401877460">
         <span class="sv-app">Mochi 字卡传讯 <b>v3.26.0</b></span>
-        <span class="sv-deploy">部署于 2026-09-14 14:29<span id="splash-ver-live"></span></span>
+        <span class="sv-deploy">部署于 2026-09-14 16:04<span id="splash-ver-live"></span></span>
       </div>
       <!-- v3.5.120：数据（IndexedDB 回填）加载完成前不显示「点击进入」按钮，
            只显示加载提示；就绪后按钮才出现（clock.js 控制显隐） -->
@@ -33065,14 +33065,7 @@ setTimeout(() => addIn('🪙 双方心意币各 +¥' + (real / 100).toFixed(2), 
 }
 } catch (e) {}
 if (window.logFish) window.logFish();
-showTyping();
-setTimeout(() => {
-hideTyping();
-const grp = d.result === 'win' ? '游戏失败·回应' : d.result === 'lose' ? '游戏胜利·回应' : '游戏平局·回应';
-const pool = window.getInteractPool ? window.getInteractPool(grp, ['再来一局？']) : ['再来一局？'];
-const say = pool.length ? pool[Math.floor(Math.random() * pool.length)] : '再来一局？';
-addRec({ side: 'in', text: say });
-}, randInt(900, 1600));
+/* 游戏结束后不再发随机文字 */
 };
 if (chatCallClose) chatCallClose.addEventListener('click', (e) => { e.stopPropagation(); closeChatCall(); });
 if (callPanelDial) callPanelDial.addEventListener('click', (e) => {
@@ -59584,6 +59577,7 @@ const store = window.activeStore();
 const KEY = 'mail-letters';
 const SNAP_KEY = 'mail-letters-snap';
 const LS_BIG_LIMIT = 200 * 1024;
+const SNAP_LIMIT = 800 * 1024; // 快照已剥离图片，只剩文字，可以放宽上限，减少"整箱丢失"的概率
 const TITLES = ['好久不见', '最近还好吗', '想你了', '给你写了封信', '深夜随想', '一些想说的话'];
 let mtab = 'in';
 let viewLetter = null;
@@ -59622,7 +59616,7 @@ return c;
 }
 function writeSnap(list, cid) {
 if (!list || !list.length) { try { localStorage.removeItem(snapKey(cid)); } catch (e) {} return; }
-try { const snap = JSON.stringify(list.map(stripLetterImg)); if (snap.length <= LS_BIG_LIMIT) localStorage.setItem(snapKey(cid), snap); } catch (e) {}
+try { const snap = JSON.stringify(list.map(stripLetterImg)); if (snap.length <= SNAP_LIMIT) localStorage.setItem(snapKey(cid), snap); } catch (e) {}
 }
 function load(cid) {
 const cs = csFor(cid);
@@ -59680,11 +59674,24 @@ return Object.keys(map).map(k => map[k]).sort((x, y) => (y.tm || 0) - (x.tm || 0
 }
 let mailDbReady = false;
 let mailPending = null;
+let _lastSaveList = null;
+let _lastSaveCid = undefined;
 function save(list, cid) {
+_lastSaveList = list; _lastSaveCid = cid;
 if (!cid && !mailDbReady) { try { mailPending = (list || []).slice(); } catch (e) {} writeSnap(list, cid); return; }
 csFor(cid).set(KEY, JSON.stringify(list));
 writeSnap(list, cid);
 }
+// 兜底：切后台/锁屏/关闭前，如果最近一次信箱保存还没来得及写完 IndexedDB，
+// 这里再补发一次写入，降低"异步写入被中断导致丢信"的概率。
+function flushMailSave() {
+if (!_lastSaveList) return;
+try { save(_lastSaveList, _lastSaveCid); } catch (e) {}
+}
+try {
+document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') flushMailSave(); });
+window.addEventListener('pagehide', flushMailSave);
+} catch (e) {}
 function updateBadge() {
 const badge = document.getElementById('mail-badge');
 if (!badge && !window.setDeskBadge) return;
@@ -59962,14 +59969,6 @@ inEl.innerHTML = inList.length
 '<div class="mail-item-desc">' + shortDesc(l.content, true) + '</div></div>' +
 '<div class="mail-item-time">' + fmtDT(l.tm) + '</div></div>').join('')
 : '<div class="ta-empty">' + (window.taFit ? window.taFit('还没有收到信，等等 TA 吧') : '还没有收到信，等等 TA 吧') + '</div>';
-if (inList.length && inEl.querySelectorAll('.mail-item').length < inList.length) {
-const html = inList.map(l => '<div class="mail-item" data-id="' + l.id + '"><div class="mail-item-av"><svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>' +
-'<div class="mail-item-body"><div class="mail-item-title">来自 ' + name +
-(l.myReply ? ' <span class="mail-tag">已回信</span>' : (l.read ? '' : ' <span class="mail-tag new">新来信</span>')) + '</div>' +
-'<div class="mail-item-desc">' + shortDesc(l.content, true) + '</div></div>' +
-'<div class="mail-item-time">' + fmtDT(l.tm) + '</div></div>').join('');
-inEl.innerHTML = html;
-}
 inEl.querySelectorAll('.mail-item').forEach(it => it.addEventListener('click', () => {
 const l = list.find(x => x.id === it.dataset.id);
 if (l) openLetter(l);
@@ -59983,13 +59982,6 @@ outEl.innerHTML = outList.length
 '<div class="mail-item-desc">' + shortDesc(l.content) + '</div></div>' +
 '<div class="mail-item-time">' + fmtDT(l.tm) + '</div></div>').join('')
 : '<div class="ta-empty">还没有寄出任何信，提笔写一封吧</div>';
-if (outList.length && outEl.querySelectorAll('.mail-item').length < outList.length) {
-const html = outList.map(l => '<div class="mail-item" data-id="' + l.id + '"><div class="mail-item-av"><svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg></div>' +
-'<div class="mail-item-body"><div class="mail-item-title">寄给 ' + name + (l.partnerReply ? ' <span class="mail-tag">对方已回信</span>' : '') + '</div>' +
-'<div class="mail-item-desc">' + shortDesc(l.content) + '</div></div>' +
-'<div class="mail-item-time">' + fmtDT(l.tm) + '</div></div>').join('');
-outEl.innerHTML = html;
-}
 outEl.querySelectorAll('.mail-item').forEach(it => it.addEventListener('click', () => {
 const l = list.find(x => x.id === it.dataset.id);
 if (l) openLetter(l);
@@ -60018,7 +60010,6 @@ if (input) input.value = '';
 if (input && input.__ceBox) input.__ceBox.textContent = '';
 if (window.chatAddSystem) window.chatAddSystem('你给 ' + name + ' 写了一封信', { mailNotice: true });
 toast('信件已寄出');
-render();
 showPage('page-mail');
 selectMailTab('out');
 render();
@@ -60476,8 +60467,11 @@ const c = document.createElement('canvas');
 const scale = Math.min(1, 720 / Math.max(img.width, img.height));
 c.width = Math.max(1, Math.round(img.width * scale));
 c.height = Math.max(1, Math.round(img.height * scale));
-c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-mailInsertInto(textarea, 'image:' + c.toDataURL('image/png'));
+const ctx2d = c.getContext('2d');
+ctx2d.fillStyle = '#fff';
+ctx2d.fillRect(0, 0, c.width, c.height);
+ctx2d.drawImage(img, 0, 0, c.width, c.height);
+mailInsertInto(textarea, 'image:' + c.toDataURL('image/jpeg', 0.72));
 } catch (err) {
 mailInsertInto(textarea, 'image:' + reader.result);
 }
@@ -76766,68 +76760,12 @@ if (s.beh.active && s.beh.active.until <= now) s.beh.active = null;
 return s.beh.active;
 }
 function opponentAI(s, now) {
-const b = s.ball, o = s.opponent, p = s.params;
+const o = s.opponent, p = s.params;
 const pH = p.paddleH;
-const taX = PADDLE_GAP + PADDLE_W;
-const ballToTa = b.vx < 0;   // 球正在向 TA（左）移动
-let targetY = o.y;           // 默认保持
-if (!ballToTa) {
-const act = behActive(s, now);
-if (act && act.type === 'shift') {
-targetY = o.targetY;     // 保持上次选的站位
-} else {
-targetY = H / 2 - pH / 2 + (Math.random() * 20 - 10);
+if (!o.aiNextAt || now >= o.aiNextAt) {
+o.targetY = Math.random() * Math.max(1, H - pH);
+o.aiNextAt = now + 180 + Math.random() * 420;
 }
-} else {
-let predY = predictY(s, taX);
-const predCenter = predY - pH / 2;
-const act = behActive(s, now);
-if (!act) {
-const r = Math.random();
-const beh = p.beh;
-const dist = b.x - taX;
-if (dist < 130 && dist > 30 && p.fumble > 0 && behCanTrigger(s, 'fumble', now) && r < p.fumble) {
-behTrigger(s, 'fumble', now, 260 + Math.random() * 200);
-const away = pH * (0.6 + Math.random() * 0.3);
-predY += (predY > H / 2 ? -1 : 1) * away;
-if (Math.random() < 0.5) predY = Math.max(p.ballR + 2, Math.min(H - p.ballR - 2, predY));
-}
-else if (dist > 180 && behCanTrigger(s, 'early', now) && r < beh.early) {
-behTrigger(s, 'early', now, 600 + Math.random() * 400);
-}
-else if (behCanTrigger(s, 'slow', now) && r < beh.slow) {
-behTrigger(s, 'slow', now, 200 + Math.random() * 200);
-o.reactUntil = now + 180 + Math.random() * 180;
-}
-else if (behCanTrigger(s, 'drift', now) && r < beh.drift) {
-behTrigger(s, 'drift', now, 400 + Math.random() * 300);
-predY += (Math.random() < 0.5 ? -1 : 1) * (12 + Math.random() * 10);
-}
-else if (dist > 200 && behCanTrigger(s, 'shift', now) && r < beh.shift) {
-behTrigger(s, 'shift', now, 1000 + Math.random() * 1000);
-o.targetY = Math.max(0, Math.min(H - pH, predCenter + (Math.random() * 80 - 40)));
-targetY = o.targetY;
-return;   // 本帧直接用新站位
-}
-else if (behCanTrigger(s, 'miss', now) && r < beh.miss) {
-behTrigger(s, 'miss', now, 300);
-predY += (Math.random() < 0.5 ? -1 : 1) * (20 + Math.random() * 15);
-}
-else if (s.beh.consecCatch >= 5 && behCanTrigger(s, 'risky', now) && r < beh.risky) {
-behTrigger(s, 'risky', now, 800 + Math.random() * 600);
-predY += (Math.random() < 0.5 ? -1 : 1) * (8 + Math.random() * 8);
-}
-} else {
-if (act.type === 'drift' || act.type === 'miss' || act.type === 'risky' || act.type === 'fumble') {
-}
-if (act.type === 'slow') {
-if (now < o.reactUntil) { targetY = o.targetY; return; }
-}
-}
-predY += (s.approachErr || 0) + (s.approachMiss || 0);
-targetY = predY - pH / 2;
-}
-o.targetY = Math.max(0, Math.min(H - pH, targetY));
 }
 function playerH(s) { return (s.params && (s.params.ppH || s.params.paddleH)) || 72; }
 function movePaddle(paddle, targetY, maxSpeed, paddleH) {
@@ -77007,15 +76945,6 @@ try {
 if (window.chatAddSystem) {
 window.chatAddSystem('Pong · 你 ' + s.playerScore + ' : ' + s.opponentScore + ' TA' + (draw ? ' · 平局' : playerWin ? ' · 你赢' : ' · TA赢'), { special: 'pong' });
 }
-const dp = POOLS[s.diff] || POOLS.easy;
-const pool = draw ? dp.draw : (playerWin ? dp.player_win : dp.opponent_win);
-const reply = pool[Math.floor(Math.random() * pool.length)];
-setTimeout(() => {
-try {
-if (window.chatAddIn) window.chatAddIn(reply, { silent: true });
-else if (window.chatSendMsg) window.chatSendMsg(reply);
-} catch (e) {}
-}, 700);
 } catch (e) {}
 }
 function hitColor(hit) {
@@ -77873,16 +77802,7 @@ if (nx === pNew.x && ny === pNew.y) return;
 candidates.push(d);
 });
 if (!candidates.length) { o.nextDir = { x: o.dir.x, y: o.dir.y }; return; }
-const target = currentTarget();
-const scored = candidates.map(function (d) { return { d: d, score: scoreDirection(d, target, head) }; });
-scored.sort(function (a, b) { return b.score - a.score; });
-let chosen;
-if ((behavior.current === 'randomTurn' || behavior.current === 'detour') && scored.length >= 2) {
-chosen = scored[1].d;
-} else {
-chosen = scored[0].d;
-}
-o.nextDir = chosen;
+o.nextDir = candidates[Math.floor(Math.random() * candidates.length)];
 }
 function scoreDirection(d, target, head) {
 const nx = head.x + d.x, ny = head.y + d.y;
@@ -78834,7 +78754,7 @@ window.chatAddSystem(T('双人打砖块 · ') + s.score + ' 分 · 最高连击 
 if (!s.endReplied) {
 s.endReplied = true;
 setTimeout(() => {
-try { if (window.chatAddIn) window.chatAddIn(pick(['还玩吗？', '再来一局？']), { silent: true }); } catch (e) {}
+/* 游戏结束后不再发随机文字 */
 }, 800);
 }
 } catch (e) {}
@@ -79539,45 +79459,11 @@ grid[r][c] = 0;
 return out;
 }
 function pickTaCol(mode) {
-const grid = st.grid;
-const legal = legalCols(grid);
+const legal = legalCols(st.grid);
 if (!legal.length) return -1;
-const randOf = (arr) => arr[Math.floor(Math.random() * arr.length)];
-const myWins = winningCols(grid, 2);
-const pThreats = winningCols(grid, 1);
-let col = null;
-const take = DIFFS[selDiff].take, blk = DIFFS[selDiff].block;
-if (mode === 'serious') {
-if (myWins.length && Math.random() < take.serious) col = randOf(myWins);
-else if (pThreats.length && Math.random() < blk.serious) col = randOf(pThreats);
-} else if (mode === 'normal') {
-if (myWins.length && Math.random() < take.normal) col = randOf(myWins);
-else if (pThreats.length && Math.random() < blk.normal) col = randOf(pThreats);
-} else if (mode === 'sandbag') {
-let pool = legal.slice();
-if (myWins.length && Math.random() < 0.8) pool = pool.filter((c) => myWins.indexOf(c) < 0);
-if (pThreats.length && Math.random() < 0.75) pool = pool.filter((c) => pThreats.indexOf(c) < 0);
-col = pool.length ? randOf(pool) : null;
-} else { // blunder：人式失误，纯随机忽略局势；偶尔连着往相近列下
-if (st.lastTaCol != null && Math.random() < 0.35) {
-const near = [st.lastTaCol - 1, st.lastTaCol, st.lastTaCol + 1].filter((c) => legal.indexOf(c) >= 0);
-if (near.length) col = randOf(near);
+return legal[Math.floor(Math.random() * legal.length)];
 }
-}
-if (col == null) col = randOf(legal);
-return col;
-}
-function applyFloor(col) {
-const pThreats = winningCols(st.grid, 1), myWins = winningCols(st.grid, 2);
-const isBlock = pThreats.indexOf(col) >= 0;
-const isWin = myWins.indexOf(col) >= 0;
-if (!isBlock && !isWin && pThreats.length) {
-st.missedBlocks++;
-if (st.missedBlocks > DIFFS[selDiff].floor) return pThreats[Math.floor(Math.random() * pThreats.length)];
-}
-if (isBlock) st.missedBlocks = 0;
-return col;
-}
+function applyFloor(col) { return col; }
 function rollMode() {
 const w = DIFFS[selDiff].w;
 const r = Math.random();
@@ -79661,7 +79547,7 @@ thinkT = setTimeout(taMove, Math.round(delay * fastMul()));
 }
 function taMove() {
 if (!st || st.over || st.turn !== 2) return;
-st.mode = rollMode();
+st.mode = 'random';
 let col = pickTaCol(st.mode);
 if (col < 0) return;
 col = applyFloor(col);
@@ -79750,13 +79636,7 @@ setStatus(winner === 1 ? '🎉 你赢了！' : winner === 2 ? T('TA') + '赢了�
 try {
 const resTxt = winner === 1 ? '你赢' : winner === 2 ? T('TA') + '赢' : '平局';
 if (window.chatAddSystem) window.chatAddSystem(T('四子棋') + ' · ' + resTxt, { special: 'c4' });
-const grp = winner === 1 ? '游戏失败·回应' : winner === 2 ? '游戏胜利·回应' : '游戏平局·回应';
-const fb = winner === 1 ? ['让你赢啦，再来？'] : winner === 2 ? ['我赢啦，再来一局吗'] : ['平局，再来一局？'];
-const pool = window.getInteractPool ? window.getInteractPool(grp, fb) : fb;
-const say = pool[Math.floor(Math.random() * pool.length)] || fb[0];
-setTimeout(() => {
-try { if (window.chatAddIn) window.chatAddIn(say, { silent: true }); } catch (e) {}
-}, 800);
+/* 游戏结束后不再发随机文字 */
 } catch (e) {}
 }
 function showOverlay(title, body, btnText) {
@@ -81820,13 +81700,7 @@ try {
 if (window.chatAddSystem) {
 window.chatAddSystem('记忆翻牌 · 你 ' + g.myPairs + ' 对 · ' + T('TA') + ' ' + g.taPairs + ' 对 · 默契 ' + g.chemistry, { special: 'memory' });
 }
-const pool = window.getInteractPool
-? window.getInteractPool('游戏平局·回应', ['一起找完了。', '好默契呀。', '差不多嘛。', '再来一局？'])
-: ['一起找完了。', '好默契呀。'];
-const say = pool.length ? pool[Math.floor(Math.random() * pool.length)] : '一起找完了。';
-setTimeout(() => {
-try { if (window.chatAddIn) window.chatAddIn(say, { silent: true }); } catch (e) {}
-}, 800);
+/* 游戏结束后不再发随机文字 */
 } catch (e) {}
 }
 function showStartOverlay() {
@@ -82142,68 +82016,11 @@ const list = cands || candidates(grid);
 return list.filter((p) => lineScore(grid, p[0], p[1], side) >= 100000);
 }
 function pickTaPt(mode) {
-const grid = st.grid;
-const cands = candidates(grid);
-if (!cands.length) return null;
-const myFive = fivePoints(grid, 2, cands);
-const pFive = fivePoints(grid, 1, cands);
-const take = DIFFS[selDiff].take, blk = DIFFS[selDiff].block;
-let pt = null;
-if (mode === 'serious') {
-if (myFive.length && Math.random() < take.serious) pt = pick(myFive);
-else if (pFive.length && Math.random() < blk.serious) pt = pick(pFive);
-} else if (mode === 'normal') {
-if (myFive.length && Math.random() < take.normal) pt = pick(myFive);
-else if (pFive.length && Math.random() < blk.normal) pt = pick(pFive);
-}
-if (!pt && mode !== 'sandbag' && mode !== 'blunder') {
-const scored = cands.map((p) => ({ p: p, s: evalPt(grid, p[0], p[1]) }));
-scored.sort((a, b) => b.s - a.s);
-if (mode === 'serious') {
-let best = scored[0];
-for (let i = 1; i < Math.min(3, scored.length); i++) {
-if (scored[i].s > best.s * (0.95 + Math.random() * 0.1)) best = scored[i];
-}
-pt = best.p;
-} else {
-pt = pick(scored.slice(0, Math.min(3, scored.length)).map((x) => x.p));
-}
-}
-if (!pt && mode === 'sandbag') {
-let pool = cands.slice();
-if (myFive.length && Math.random() < 0.8) pool = pool.filter((p) => myFive.indexOf(p) < 0);
-if (pFive.length && Math.random() < 0.75) pool = pool.filter((p) => pFive.indexOf(p) < 0);
-const scored = pool.map((p) => ({ p: p, s: evalPt(grid, p[0], p[1]) }));
-scored.sort((a, b) => b.s - a.s);
-pool = scored.slice(3).map((x) => x.p);
-pt = pool.length ? pick(pool) : null;
-}
-if (!pt && mode === 'blunder') {
-if (st.lastPlayer && Math.random() < 0.7) {
-const near = [];
-for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) {
-const rr = st.lastPlayer[0] + dr, cc = st.lastPlayer[1] + dc;
-if (inBoard(rr, cc) && grid[rr][cc] === 0) near.push([rr, cc]);
-}
-if (near.length) pt = pick(near);
-}
-}
-if (!pt) pt = pick(cands);
-return pt;
-}
-function applyFloor(pt) {
 const cands = candidates(st.grid);
-const pFive = fivePoints(st.grid, 1, cands);
-const myFive = fivePoints(st.grid, 2, cands);
-const isBlock = pFive.some((p) => p[0] === pt[0] && p[1] === pt[1]);
-const isWin = myFive.some((p) => p[0] === pt[0] && p[1] === pt[1]);
-if (!isBlock && !isWin && pFive.length) {
-st.missedBlocks++;
-if (st.missedBlocks > DIFFS[selDiff].floor) return pick(pFive);
+if (!cands.length) return null;
+return pick(cands);
 }
-if (isBlock) st.missedBlocks = 0;
-return pt;
-}
+function applyFloor(pt) { return pt; }
 function rollMode() {
 const w = DIFFS[selDiff].w;
 const r = Math.random();
@@ -82307,18 +82124,16 @@ thinkT = setTimeout(taMove, Math.round(delay * fastMul()));
 }
 function taMove() {
 if (!st || st.over || st.turn !== 2) return;
-st.mode = rollMode();
+st.mode = 'random';
 const picked = pickTaPt(st.mode);
 if (!picked) { endGame(0); return; }
 const pt = applyFloor(picked);
-const forced = pt[0] !== picked[0] || pt[1] !== picked[1];
 st.grid[pt[0]][pt[1]] = 2;
 st.moves++;
 st.lastTaPt = pt;
 sfxDropTa();
 drawStone(pt[0], pt[1], 2);
 markLast(pt[0], pt[1]);
-if (forced) taSay(pick(['这手我不能装没看见～', '堵你！别想连五']));
 const line = winLineAt(st.grid, pt[0], pt[1], 2);
 if (line) { highlightWin(line); endGame(2); return; }
 if (isFull(st.grid)) { endGame(0); return; }
@@ -82421,13 +82236,7 @@ setStatus(winner === 1 ? '🎉 你赢了！' : winner === 2 ? T('TA') + '赢了�
 try {
 const resTxt = winner === 1 ? '你赢' : winner === 2 ? T('TA') + '赢' : '平局';
 if (window.chatAddSystem) window.chatAddSystem(T('五子棋') + ' · ' + resTxt, { special: 'gomoku' });
-const grp = winner === 1 ? '游戏失败·回应' : winner === 2 ? '游戏胜利·回应' : '游戏平局·回应';
-const fb = winner === 1 ? ['让你赢啦，再来？'] : winner === 2 ? ['五连！我赢啦'] : ['平局，再来一局？'];
-const pool = window.getInteractPool ? window.getInteractPool(grp, fb) : fb;
-const say = pool[Math.floor(Math.random() * pool.length)] || fb[0];
-setTimeout(() => {
-try { if (window.chatAddIn) window.chatAddIn(say, { silent: true }); } catch (e) {}
-}, 800);
+/* 游戏结束后不再发随机文字 */
 } catch (e) {}
 }
 function showOverlay(title, body, btnText) {
@@ -83066,12 +82875,7 @@ if (endBtn) endBtn.hidden = false;
 setStatus('🎉 一起清完了！默契 ' + chem);
 try {
 if (window.chatAddSystem) window.chatAddSystem(T('连连看') + ' · 一起清完 · 默契 ' + chem, { special: 'linkup' });
-const fb = ['一起连完啦。', '好默契呀。', '最后几张好难找。', '再来一局？'];
-const pool = window.getInteractPool ? window.getInteractPool('游戏平局·回应', fb) : fb;
-const say = pool[Math.floor(Math.random() * pool.length)] || fb[0];
-setTimeout(() => {
-try { if (window.chatAddIn) window.chatAddIn(say, { silent: true }); } catch (e) {}
-}, 800);
+/* 游戏结束后不再发随机文字 */
 } catch (e) {}
 }
 function showOverlay(title, body, btnText) {
@@ -83904,12 +83708,7 @@ if (endBtn) endBtn.hidden = false;
 setStatus('🎉 达成目标！默契 ' + chem);
 try {
 if (window.chatAddSystem) window.chatAddSystem(T('消消乐') + ' · 达成 ' + st.score + ' 分 · 默契 ' + chem, { special: 'match3' });
-const fb = ['通关啦，配合不错。', '我们好默契呀。', '再来一局？'];
-const pool = window.getInteractPool ? window.getInteractPool('游戏平局·回应', fb) : fb;
-const say = pool[Math.floor(Math.random() * pool.length)] || fb[0];
-setTimeout(() => {
-try { if (window.chatAddIn) window.chatAddIn(say, { silent: true }); } catch (e) {}
-}, 800);
+/* 游戏结束后不再发随机文字 */
 } catch (e) {}
 }
 function showOverlay(title, body, btnText) {
@@ -84439,12 +84238,7 @@ showOverlay(T('TA') + '拍得了',
 '<div class="pong-end-stat">📬 不过 TA 拍走的拍品，过几天会寄回给你</div>',
 st.idx + 1 < st.lots.length ? '下一件' : '结算', 'ta');
 setStatus(T('TA') + '把「' + item.name + '」抱走了');
-try {
-const fb = ['这件归我啦。', '嘿嘿，到手。', '眼光不错吧。'];
-const pool = window.getInteractPool ? window.getInteractPool('游戏胜利·回应', fb) : fb;
-const say = pool[Math.floor(Math.random() * pool.length)] || fb[0];
-setTimeout(() => { try { if (window.chatAddIn) window.chatAddIn(say, { silent: true }); } catch (e) {} }, 800);
-} catch (e) {}
+/* 游戏结束后不再发随机文字 */
 nextLotBtn();
 }
 function passLot() {
@@ -84458,12 +84252,7 @@ showOverlay('流拍了',
 '<div class="pong-end-stat">' + item.name + ' 没人要，收回仓库</div>',
 st.idx + 1 < st.lots.length ? '下一件' : '结算', 'pass');
 setStatus('「' + item.name + '」流拍了');
-try {
-const fb = ['这玩意没人要啊。', '亏本了亏本了。'];
-const pool = window.getInteractPool ? window.getInteractPool('游戏平局·回应', fb) : fb;
-const say = pool[Math.floor(Math.random() * pool.length)] || fb[0];
-setTimeout(() => { try { if (window.chatAddIn) window.chatAddIn(say, { silent: true }); } catch (e) {} }, 800);
-} catch (e) {}
+/* 游戏结束后不再发随机文字 */
 nextLotBtn();
 }
 function hammer() {
@@ -84497,12 +84286,7 @@ showOverlay('落槌！',
 '<div class="pong-end-stat">已收进 🎒 小收藏（剩 ' + yuan(myBalance()) + '）· 可在 🎒 里转赠给 ' + T('TA') + '</div>',
 st.idx + 1 < st.lots.length ? '下一件' : '结算', 'win');
 setStatus('「' + item.name + '」是你的了，花了 ' + yuan(st.cur));
-try {
-const fb = ['被你拍走了…', '亏了亏了。', '那件本来我想要来着。'];
-const pool = window.getInteractPool ? window.getInteractPool('游戏失败·回应', fb) : fb;
-const say = pool[Math.floor(Math.random() * pool.length)] || fb[0];
-setTimeout(() => { try { if (window.chatAddIn) window.chatAddIn(say, { silent: true }); } catch (e) {} }, 800);
-} catch (e) {}
+/* 游戏结束后不再发随机文字 */
 nextLotBtn();
 }
 function nextLotBtn() {
@@ -84620,7 +84404,7 @@ try {
 if (window.chatAddSystem) window.chatAddSystem(T('心意币拍卖会') + ' · 转赠 ' + T('TA') + '「' + it.name + '」', { special: 'auction' });
 } catch (e) {}
 setTimeout(() => {
-try { if (window.chatAddIn) window.chatAddIn(pick(['收下啦！超喜欢', '你也喜欢就好', '下次拍卖会我让给你一件']), { silent: true }); } catch (e) {}
+/* 不再发随机文字 */
 }, 900);
 showBag();
 }
@@ -90931,4 +90715,4 @@ lastHeal: his
 <!-- __MOCHI_EOF__ -->
 </body>
 </html>
-<!-- __MOCHI_EOF__ mu1c9vo9 -->
+<!-- __MOCHI_EOF__ mu1fod78 -->
